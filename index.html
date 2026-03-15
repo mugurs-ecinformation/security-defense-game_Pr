@@ -70,7 +70,7 @@
     /* DEBUG */
     #debug{
       position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px;
-      max-width:60ch; white-space:pre-wrap;
+      max-width:70ch; white-space:pre-wrap;
     }
   </style>
 </head>
@@ -98,6 +98,7 @@
       </div>
       <div id="introControls" role="group" aria-label="Intro besturing">
         <button class="introBtn" id="skipBtn">Overslaan</button>
+        <!-- Yedek onclick: bazı durumlarda listener yakalanmasa bile çalışsın -->
         <button class="introBtn" id="startBtn" onclick="__startGame()">Start</button>
       </div>
     </div>
@@ -121,25 +122,19 @@
     </div>
   </div>
 
-  <!-- AUDIO (ambient versiyon) -->
-  <audio id="bgm" loop preload="auto">
-    assets/audio/bgm_soft.wav
-  </audio>
-
-  <audio id="clickSfx" preload="auto">
-    assets/audio/click.wav
-  </audio>
+  <!-- AUDIO (kaynak dinamik seçilecek) -->
+  <audio id="bgm" loop preload="auto"></audio>
+  <audio id="clickSfx" preload="auto">assets/audio/click.wav</audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
 /* =======================
-   AUDIO & UI
+   AUDIO & UI (DAYANIKLI SÜRÜM)
 ======================= */
 let audioCtx = null;
 let soundOn = true;
 
-// DOM
 const bgm        = document.getElementById("bgm");
 const clickSfx   = document.getElementById("clickSfx");
 const soundBtn   = document.getElementById("soundBtn");
@@ -169,7 +164,30 @@ async function ensureAudioUnlocked(){
   }
 }
 
-/* Fade-in helper: volume’u 0 → target’e duration ms’de taşı */
+/* BGM KAYNAĞINI OTOMATİK SEÇ: soft -> ambient -> test */
+const BGM_CANDIDATES = [
+  "assets/audio/bgm_soft.wav",
+  "assets/audio/bgm.wav",
+  "assets/audio/bgm_test.wav"
+];
+let chosenBgm = null;
+
+async function chooseBgm(){
+  for (const url of BGM_CANDIDATES){
+    try {
+      const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+      if (res.ok){
+        chosenBgm = url;
+        bgm.src = url;
+        log("BGM gekozen: " + url);
+        return;
+      }
+    } catch(_) {}
+  }
+  log("Geen BGM gevonden. Voeg een van deze toe: " + BGM_CANDIDATES.join(", "));
+}
+
+/* Fade‑in: volume 0 → target (ms) */
 function fadeIn(audioEl, target=0.35, duration=2500){
   try {
     audioEl.volume = 0.0;
@@ -185,15 +203,17 @@ function fadeIn(audioEl, target=0.35, duration=2500){
 }
 
 async function playBgmSoft(){
+  if (!chosenBgm){
+    await chooseBgm();
+    if (!chosenBgm) return; // hiç kaynak yoksa sessiz kal
+  }
   try {
-    if (soundOn){
-      bgm.currentTime = 0;           // baştan
-      await bgm.play();               // kullanıcı jestinde
-      fadeIn(bgm, 0.35, 2500);        // yumuşak giriş
-      log("BGM (ambient) playing with fade‑in");
-    }
+    bgm.currentTime = 0;
+    await bgm.play();         // kullanıcı jestinde
+    fadeIn(bgm, 0.35, 2500);  // nazik giriş
+    log("BGM (fade‑in) playing → " + chosenBgm);
   } catch(e){
-    log("BGM play error: "+e);
+    log("BGM play error: " + e);
   }
 }
 
@@ -209,11 +229,10 @@ soundBtn.addEventListener("click", async () => {
   updateSoundLabel();
   if (soundOn){
     await ensureAudioUnlocked();
-    // tekrar açıldığında da çok sert olmasın diye hafif fade‑in
     try { await bgm.play(); fadeIn(bgm, 0.35, 1200); } catch(e){ log("bgm resume err: "+e); }
     try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ /* sessiz kalabilir */ }
   } else {
-    // istersen burada pause da edebiliriz: bgm.pause();
+    // istersen burada pause da edebilirsin: bgm.pause();
   }
 });
 
@@ -223,12 +242,10 @@ window.addEventListener('pointerdown', async () => { await ensureAudioUnlocked()
 /* =======================
    START / SKIP
 ======================= */
-// Tek fonksiyon: garanti başlatma
 async function __startGame(){
   try {
     await ensureAudioUnlocked();
     await playBgmSoft();
-    // küçük klik ile teyit
     try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(_){}
     hideIntro();
   } catch (e) {
@@ -247,7 +264,7 @@ function hideIntro(){ intro.classList.add("hidden"); }
 ======================= */
 (async () => {
   try {
-    const res = await fetch('assets/intro/intro.mp4', { method: 'HEAD' });
+    const res = await fetch('assets/intro/intro.mp4', { method: 'HEAD', cache: 'no-store' });
     if (res.ok) {
       introVideo.classList.remove('hidden');
       videoStatus.textContent = 'Introvideo wordt automatisch afgespeeld (zonder geluid).';
@@ -296,6 +313,11 @@ function update(){
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 loop();
+
+/* =======================
+   SAYFA YÜKLENİNCE BGM ADAYINI BELİRLE
+======================= */
+chooseBgm();
 </script>
 
 </body>
