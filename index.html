@@ -40,7 +40,7 @@
        Controleer bronnen en vraag: <i>“Mag dit gedeeld worden?”</i><br/>
        Volg bedrijfsrichtlijnen (AVG/GDPR, versleuteling, toegangsbeheer, logging).</p>
     <div id="introBtns">
-      <button id="skipBtn" class="btn">Overslaan</button>
+      <button id="skipBtn"  class="btn">Overslaan</button>
       <button id="startBtn" class="btn" onclick="window.__startGame()">Start</button>
     </div>
   </div>
@@ -61,22 +61,22 @@
   <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
 </div>
 
-<!-- AUDIO (tek kaynak, garantili) -->
-assets/audio/bgm_test.wav</audio>
-assets/audio/click.wav</audio>
+<!-- AUDIO (NET & DOĞRU TANIM) -->
+<audio id="bgm" src="assets/audio/bgm_soft.wav" loop preload="auto"></audio>
+<audio id="clickSfx" src="assets/audio/click.wav" preload="auto"></audio>
 
 <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ===== ULTRA-BASİT ve GARANTİLİ SÜRÜM ===== */
-
+/* ===== BASİT & SAĞLAM ===== */
 let audioCtx = null;
 let soundOn  = true;
+
 const debugEl  = document.getElementById('debug');
 const log = (m)=>{ debugEl.textContent = String(m); };
 
-const bgm      = document.getElementById('bgm');
-const clickSfx = document.getElementById('clickSfx');
+const bgm      = document.getElementById('bgm');       // <-- BGM burada (src ile)
+const clickSfx = document.getElementById('clickSfx');  // <-- Klik burada (src ile)
 const startBtn = document.getElementById('startBtn');
 const skipBtn  = document.getElementById('skipBtn');
 const intro    = document.getElementById('intro');
@@ -107,6 +107,7 @@ function fadeIn(aud, target=0.35, ms=1200){
   }catch(_){}
 }
 
+// Ses düğmesi
 function updateSoundBtn(){
   soundBtn.textContent = 'Geluid: '+(soundOn?'aan':'uit');
   soundBtn.setAttribute('aria-pressed', String(soundOn));
@@ -128,15 +129,15 @@ window.__startGame = async function(){
   log('Start clicked');
   try{
     await ensureAudioUnlocked();
-    bgm.currentTime = 0;       // baştan
-    await bgm.play();          // kullanıcı jestinde
-    fadeIn(bgm, 0.25, 800);    // yumuşak giriş
+    bgm.currentTime = 0;          // Baştan
+    await bgm.play();             // Kullanıcı jestinde
+    fadeIn(bgm, 0.25, 800);       // Yumuşak giriş
     try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
     intro.classList.add('hidden');
-    log('BGM playing → assets/audio/bgm_test.wav');
+    log('BGM playing (bgm_soft.wav)');
   }catch(e){
     log('Start error: '+e);
-    intro.classList.add('hidden'); // intro yine de kapansın
+    intro.classList.add('hidden');
   }
 };
 
