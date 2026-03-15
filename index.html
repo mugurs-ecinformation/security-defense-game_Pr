@@ -80,9 +80,9 @@
   <!-- INTRO: AI VEILIG GEBRUIK -->
   <div id="introContainer" aria-label="Intro video overlay">
     <!-- Eğer intro.mp4 varsa video öğesi görünecek; yoksa bilgilendirme kutusu -->
-    <video id="introVideo" playsinline autoplay muted class="hidden">
-      assets/intro/intro.mp4
-      assets/intro/ai-veilig-gebruik.vtt
+    <video id="introVideo" playsinline autoplay muted class="hidden" controlslist="nodownload noplaybackrate">
+      <source src="assets/intro/intro.mp4" type="video/mp4" />
+      <track src="assets/intro/ai-veilig-gebruik.vtt" kind="subtitles" srclang="nl" label="Nederlands" default />
       Uw browser ondersteunt de video niet.
     </video>
 
@@ -97,8 +97,9 @@
         <span id="videoStatus">Introvideo is nog niet geüpload. U kunt direct starten.</span>
       </div>
       <div id="introControls" role="group" aria-label="Intro besturing">
+        <!-- Yedek onclick: bazı durumlarda event listener yakalanmazsa garanti olsun -->
         <button class="introBtn" id="skipBtn">Overslaan</button>
-        <button class="introBtn" id="startBtn">Start</button>
+        <button class="introBtn" id="startBtn" onclick="__startGame()">Start</button>
       </div>
     </div>
   </div>
@@ -123,27 +124,34 @@
 
   <!-- AUDIO (WAV versiyonu: TEST TONU) -->
   <audio id="bgm" loop preload="auto">
-    assets/audio/bgm_test.wav
+    <source src="assets/audio/bgm_test.wav" type="audio/wav" />
   </audio>
 
   <audio id="clickSfx" preload="auto">
-    assets/audio/click.wav
+    <source src="assets/audio/click.wav" type="audio/wav" />
   </audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
 /* =======================
-   AUDIO UNLOCK (NL)
+   AUDIO & UI
 ======================= */
 let audioCtx = null;
 let soundOn = true;
 
-const bgm = document.getElementById("bgm");
-const clickSfx = document.getElementById("clickSfx");
-const soundBtn = document.getElementById("soundBtn");
+// DOM
+const bgm        = document.getElementById("bgm");
+const clickSfx   = document.getElementById("clickSfx");
+const soundBtn   = document.getElementById("soundBtn");
 const bgmTestBtn = document.getElementById("bgmTestBtn");
-const debugEl = document.getElementById("debug");
+const debugEl    = document.getElementById("debug");
+
+const intro         = document.getElementById("introContainer");
+const introVideo    = document.getElementById("introVideo");
+const videoStatus   = document.getElementById("videoStatus");
+const startBtn      = document.getElementById("startBtn");
+const skipBtn       = document.getElementById("skipBtn");
 
 function log(msg){ debugEl.textContent = String(msg); }
 
@@ -155,17 +163,20 @@ function getAudioContext(){
   return audioCtx;
 }
 
-async function unlockAudio(){
+async function ensureAudioUnlocked(){
   const ctx = getAudioContext();
   if (ctx && ctx.state === "suspended"){
     try { await ctx.resume(); } catch(e){ log("resume err: "+e); }
   }
+}
+
+async function playBgm(){
   try {
     if (soundOn){
-      bgm.volume = 1.0;
-      bgm.currentTime = 0;
-      await bgm.play();
-      log("BGM playing @ volume="+bgm.volume);
+      bgm.volume = 1.0;       // maksimum
+      bgm.currentTime = 0;    // baştan
+      await bgm.play();       // kullanıcı jestinde garanti
+      log("BGM playing @ volume=1");
     }
   } catch(e){
     log("BGM play error: "+e);
@@ -183,52 +194,51 @@ updateSoundLabel();
 soundBtn.addEventListener("click", async () => {
   soundOn = !soundOn;
   updateSoundLabel();
-  if (soundOn){
-    await unlockAudio();
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); }
-  }
+  if (soundOn){ await ensureAudioUnlocked(); try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); } }
 });
 
-// Debug butonu: kullanıcı jesti ile doğrudan BGM'yi çal
-bgmTestBtn.addEventListener("click", async () => {
-  try { await unlockAudio(); } catch(e){ log("bgmTest err: "+e); }
-});
+// Global jest: sayfada herhangi bir ilk tıklamada ses kilidini aç (ek destek)
+window.addEventListener('pointerdown', async () => { await ensureAudioUnlocked(); }, { once:true });
 
 /* =======================
-   INTRO FLOW
+   START / SKIP
 ======================= */
-const intro = document.getElementById("introContainer");
-const startBtn = document.getElementById("startBtn");
-const skipBtn  = document.getElementById("skipBtn");
-const introVideo = document.getElementById("introVideo");
-const videoStatus = document.getElementById("videoStatus");
+// Tek fonksiyon: garanti başlatma
+async function __startGame(){
+  try {
+    await ensureAudioUnlocked();
+    await playBgm();
+    // küçük klik ile teyit
+    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(_){}
+    hideIntro();
+  } catch (e) {
+    log("Start error: " + e);
+  }
+}
 
-// Eğer video dosyası varsa <video> elementini göster
+// Yedek bağlama (onclick zaten var)
+if (startBtn) startBtn.addEventListener('click', __startGame);
+if (skipBtn)  skipBtn.addEventListener('click', () => hideIntro());
+
+function hideIntro(){ intro.classList.add("hidden"); }
+
+/* =======================
+   INTRO VIDEO DURUMU
+======================= */
 (async () => {
   try {
     const res = await fetch('assets/intro/intro.mp4', { method: 'HEAD' });
     if (res.ok) {
       introVideo.classList.remove('hidden');
       videoStatus.textContent = 'Introvideo wordt automatisch afgespeeld (zonder geluid).';
+      // Otomatik oynasın (muted); kullanıcı Start deyince ses açılacak
+      try { await introVideo.play(); } catch(_){}
     }
-  } catch(e) {}
+  } catch(e) { /* video yoksa sorun değil */ }
 })();
 
-function hideIntro(){ intro.classList.add("hidden"); }
-
-startBtn.addEventListener("click", async () => {
-  await unlockAudio();
-  hideIntro();
-});
-
-skipBtn.addEventListener("click", () => {
-  hideIntro();
-});
-
-introVideo.addEventListener("ended", () => hideIntro());
-
 /* =======================
-   GAME LOOP
+   BASİT OYUN DÖNGÜSÜ
 ======================= */
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -236,7 +246,7 @@ const ctx = canvas.getContext("2d");
 let x = 150, y = 150, vx = 3, vy = 2, r = 20, hue = 200;
 
 canvas.addEventListener("pointerdown", async () => {
-  await unlockAudio();
+  await ensureAudioUnlocked();
   if (soundOn){
     try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); }
   }
@@ -265,11 +275,7 @@ function update(){
   if (y - r < 10 || y + r > canvas.height - 10) vy *= -1;
 }
 
-function loop(){
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
 loop();
 </script>
 
