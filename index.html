@@ -4,283 +4,182 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AI Security Defense (NL)</title>
-
   <style>
-    :root{
-      --bg:#0b0f1a; --fg:#e9eef8; --accent:#35c0ff; --accent2:#7cffb9;
-      --glass:rgba(255,255,255,.12);
-    }
-    html,body{
-      height:100%; margin:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    }
-
-    /* INTRO OVERLAY */
-    #introContainer{
-      position:fixed; inset:0; background:#000; display:flex;
-      align-items:center; justify-content:center; flex-direction:column;
-      z-index:9999; color:#fff;
-    }
-    #introBox{
-      max-width:min(92vw,900px);
+    :root{ --bg:#0b0f1a; --fg:#e9eef8; --accent:#35c0ff; --glass:rgba(255,255,255,.12); }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+    #intro{ position:fixed; inset:0; background:#000; color:#fff; display:flex;
+      align-items:center; justify-content:center; z-index:9999; }
+    #introBox{ max-width:min(92vw,900px); text-align:center; line-height:1.5;
       padding:18px 20px; border:1px solid #fff3; border-radius:10px;
-      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));
-      text-align:center; line-height:1.45;
-    }
-    #introControls{ margin-top:12px; display:flex; gap:12px; justify-content:center; }
-    .introBtn{
-      background:var(--glass); color:#fff; border:1px solid #fff;
-      padding:10px 16px; cursor:pointer; border-radius:8px;
-      backdrop-filter:blur(4px); font-weight:600;
-    }
-    .introBtn:hover{ transform:translateY(-1px); }
-    .hidden{ display:none !important; }
-
-    /* TOP BAR */
-    #topbar{
-      position:fixed; top:0; left:0; right:0; height:56px; display:flex;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0)); }
+    #introBtns{ margin-top:12px; display:flex; gap:12px; justify-content:center; }
+    .btn{ background:var(--glass); color:#fff; border:1px solid #5a6b85;
+      padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
+    #topbar{ position:fixed; top:0; left:0; right:0; height:56px; display:flex;
       align-items:center; justify-content:space-between; padding:0 12px;
-      background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0)); z-index:10;
-      gap:8px;
-    }
+      background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0)); z-index:10; }
     #brand{ font-weight:700; color:var(--accent); }
-    #btnGroup{ display:flex; gap:8px; align-items:center; }
-    .btn{
-      background:var(--glass); color:var(--fg); border:1px solid #5a6b85;
-      padding:8px 12px; border-radius:8px; cursor:pointer;
-    }
-
-    /* GAME AREA */
-    #game{
-      position:relative; width:100%; height:100%; display:flex;
-      align-items:center; justify-content:center;
-    }
-    canvas{
-      width:min(96vw,900px); height:min(68vh,560px);
-      background:#0e1627; border:1px solid #1e2a44;
-      border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    #hint{
-      position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
-      color:#a8b3c7; opacity:.9; font-size:14px; text-align:center;
-    }
-
-    /* DEBUG */
-    #debug{
-      position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px;
-      max-width:70ch; white-space:pre-wrap;
-    }
+    #game{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    canvas{ width:min(96vw,900px); height:min(68vh,560px); background:#0e1627;
+      border:1px solid #1e2a44; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    #hint{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); color:#a8b3c7; opacity:.9; font-size:14px; text-align:center; }
+    #debug{ position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px; max-width:70ch; white-space:pre-wrap; }
+    .hidden{ display:none !important; }
   </style>
 </head>
-
 <body>
 
-  <!-- INTRO (NL) -->
-  <div id="introContainer" aria-label="Intro">
+  <!-- INTRO -->
+  <div id="intro" aria-label="Intro">
     <div id="introBox">
-      <h2 style="margin:6px 0 10px;">AI veilig en verantwoord gebruiken</h2>
-      <p style="margin:0;">
-        Deel geen gevoelige/vertrouwelijke informatie met AI-tools.<br/>
-        Controleer bronnen en vraag: <i>“Mag dit gedeeld worden?”</i><br/>
-        Volg bedrijfsrichtlijnen (AVG/GDPR, versleuteling, toegangsbeheer, logging).
-      </p>
-      <div id="introControls" role="group" aria-label="Intro besturing">
-        <button class="introBtn" id="skipBtn">Overslaan</button>
-        <!-- Yedek onclick: listener kaçarsa bile çalışır -->
-        <button class="introBtn" id="startBtn" onclick="window.__startGame()">Start</button>
+      <h2>AI veilig en verantwoord gebruiken</h2>
+      <p>Deel geen gevoelige/vertrouwelijke informatie met AI-tools.<br/>
+         Controleer bronnen en vraag: <i>“Mag dit gedeeld worden?”</i><br/>
+         Volg bedrijfsrichtlijnen (AVG/GDPR, versleuteling, toegangsbeheer, logging).</p>
+      <div id="introBtns">
+        <button id="skipBtn" class="btn">Overslaan</button>
+        <!-- inline onclick: garantör -->
+        <button id="startBtn" class="btn" onclick="window.__startGame()">Start</button>
       </div>
     </div>
   </div>
 
-  <!-- TOP BAR -->
-  <div id="topbar" role="toolbar" aria-label="Spel besturing">
+  <!-- TOP -->
+  <div id="topbar" role="toolbar" aria-label="Spelbesturing">
     <div id="brand">🛡️ AI Security Defense</div>
-    <div id="btnGroup">
-      <button id="bgmTestBtn" class="btn" type="button">BGM Test (debug)</button>
+    <div>
+      <button id="bgmTestBtn" class="btn" type="button">BGM Test</button>
       <button id="soundBtn" class="btn" type="button" aria-pressed="true">Geluid: aan</button>
     </div>
   </div>
 
-  <!-- GAME AREA -->
+  <!-- GAME -->
   <div id="game">
     <canvas id="canvas" width="900" height="560" aria-label="Speelveld"></canvas>
-    <div id="hint">
-      Tip: Klik in het speelveld om een klik‑geluid te horen.<br/>
-      Let op: Audio start pas na uw eerste klik op <b>Start</b>.
-    </div>
+    <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
   </div>
 
-  <!-- AUDIO — DÜZGÜN ETİKETLER -->
+  <!-- AUDIO (DÜZGÜN TANIM) -->
   <audio id="bgm" loop preload="auto"></audio>
-  <audio id="clickSfx" preload="auto">assets/audio/click.wav</audio>
+  <audio id="clickSfx" preload="auto" src="assets/audio/click.wav"></audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ========= EN KRİTİK HATALAR DÜZELTİLDİ =========
-   Önceki sürümde click SFX <audio> etiketi bozuktu → JS tamamen kilitlendi.
-   Bu dosya, temiz ve hatasız HTML + sağlam JS içerir.
-================================================= */
-
-/* =======================
-   AUDIO & UI (STABİL)
-======================= */
+/* ======== SAĞLAM KOD – ADIM ADIM LOG ======== */
 let audioCtx = null;
 let soundOn = true;
+const debugEl = document.getElementById('debug');
+const log = (m)=>{ debugEl.textContent = String(m); };
 
-const bgm        = document.getElementById("bgm");
-const clickSfx   = document.getElementById("clickSfx");
-const soundBtn   = document.getElementById("soundBtn");
-const bgmTestBtn = document.getElementById("bgmTestBtn");
-const debugEl    = document.getElementById("debug");
-
-const intro    = document.getElementById("introContainer");
-const startBtn = document.getElementById("startBtn");
-const skipBtn  = document.getElementById("skipBtn");
-
-function log(msg){ debugEl.textContent = String(msg); }
+const bgm      = document.getElementById('bgm');
+const clickSfx = document.getElementById('clickSfx');
+const startBtn = document.getElementById('startBtn');
+const skipBtn  = document.getElementById('skipBtn');
+const intro    = document.getElementById('intro');
+const soundBtn = document.getElementById('soundBtn');
+const bgmTest  = document.getElementById('bgmTestBtn');
 
 function getAudioContext(){
-  if (!audioCtx){
+  if(!audioCtx){
     const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) audioCtx = new Ctx();
+    if(Ctx) audioCtx = new Ctx();
   }
   return audioCtx;
 }
 async function ensureAudioUnlocked(){
   const ctx = getAudioContext();
-  if (ctx && ctx.state === "suspended"){
-    try { await ctx.resume(); } catch(e){ log("resume err: "+e); }
+  if(ctx && ctx.state === 'suspended'){
+    try { await ctx.resume(); } catch(e){ log('resume err: '+e); }
   }
 }
-// Herhangi bir ilk tıklamada bile kilidi açmayı dene (ek güvence)
-window.addEventListener('pointerdown', async () => { await ensureAudioUnlocked(); }, { once:true });
 
-/* Basit fade‑in: 0 -> target (ms) */
-function fadeIn(audioEl, target=0.35, duration=2500){
-  try {
-    audioEl.volume = 0.0;
-    const steps = 25;
-    const stepDur = Math.max(16, Math.floor(duration/steps));
-    let i = 0;
-    const inc = target/steps;
-    const timer = setInterval(()=>{
-      i++; audioEl.volume = Math.min(target, audioEl.volume + inc);
-      if(i>=steps){ clearInterval(timer); }
-    }, stepDur);
-  } catch(_) {}
+// Her ilk dokunuşta kilidi açmayı dene (garanti)
+window.addEventListener('pointerdown', async ()=>{ await ensureAudioUnlocked(); }, {once:true});
+
+// Basit fade‑in
+function fadeIn(aud, target=0.35, ms=2500){
+  try{
+    aud.volume=0; const steps=25, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
+    let i=0; const t=setInterval(()=>{ i++; aud.volume=Math.min(target, aud.volume+inc); if(i>=steps) clearInterval(t); }, dt);
+  }catch(_){}
 }
 
-function updateSoundLabel(){
-  soundBtn.textContent = "Geluid: " + (soundOn ? "aan" : "uit");
-  soundBtn.setAttribute("aria-pressed", String(soundOn));
-  if (!soundOn){ bgm.volume = 0.0; clickSfx.volume = 0.0; }
-}
-updateSoundLabel();
-
-soundBtn.addEventListener("click", async () => {
-  soundOn = !soundOn;
-  updateSoundLabel();
-  if (soundOn){
-    await ensureAudioUnlocked();
-    try { await bgm.play(); fadeIn(bgm, 0.35, 1200); } catch(e){ log("bgm resume err: "+e); }
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){}
-  } else {
-    // İstersen pause: bgm.pause();
-  }
-});
-
-/* =======================
-   START / SKIP
-======================= */
-const BGM_CANDIDATES = [
-  "assets/audio/bgm_soft.wav",
-  "assets/audio/bgm.wav",
-  "assets/audio/bgm_test.wav"
-];
+// BGM aday listesi (ilk çalışan seçilir)
+const BGM_LIST = ['assets/audio/bgm_soft.wav','assets/audio/bgm.wav','assets/audio/bgm_test.wav'];
 let chosenBgm = null;
 
-/* Kaynakları sırayla SET ET + PLAY ET (kullanıcı jestinde) */
-async function tryStartBgm(){
+async function tryPlayFirstAvailable(){
   await ensureAudioUnlocked();
-  for (const url of BGM_CANDIDATES){
-    try {
-      bgm.pause();
-      bgm.src = url;
-      bgm.currentTime = 0;
-      await bgm.play();       // jest içinde
-      fadeIn(bgm, 0.35, 2500);
-      chosenBgm = url;
-      log("BGM seçildi ve çalıyor → " + url);
+  for(const url of BGM_LIST){
+    try{
+      bgm.pause(); bgm.src = url; bgm.currentTime=0;
+      await bgm.play(); fadeIn(bgm, 0.35, 1500);
+      chosenBgm = url; log('BGM chosen & playing → '+url);
       return true;
-    } catch(e){
-      log("Denendi ama olmadı: " + url + " | " + e);
+    }catch(e){
+      log('Tried: '+url+' | '+e);
     }
   }
-  log("BGM bulunamadı/çalınamadı. Mevcut yollardan en az biri gerekli.");
+  log('No BGM playable. Make sure at least one exists under assets/audio/.');
   return false;
 }
 
-/* Global fonksiyon: inline onclick için */
+// Start (inline onclick için global)
 window.__startGame = async function(){
-  try {
-    const ok = await tryStartBgm();
-    // küçük klik ile teyit (başarısız olsa bile intro'yu kapatırız)
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(_){}
-    hideIntro();
-    if (!ok) log("Start tamamlandı ama BGM çalmadı (dosya yok veya engel).");
-  } catch(e){
-    log("Start error: " + e);
-  }
+  log('Start clicked');
+  const ok = await tryPlayFirstAvailable();
+  // küçük klik ile teyit (başarısız olsa da hata atma)
+  try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
+  intro.classList.add('hidden');
+  if(!ok) log('Start done (no BGM).');
 };
 
-// Listener da dursun (yedek)
-if (startBtn) startBtn.addEventListener('click', window.__startGame);
-if (skipBtn)  skipBtn.addEventListener('click', () => hideIntro());
+// Ek listener (yedek)
+startBtn.addEventListener('click', window.__startGame);
 
-function hideIntro(){ intro.classList.add("hidden"); }
+// Overslaan
+skipBtn.addEventListener('click', ()=>{ intro.classList.add('hidden'); log('Skipped intro'); });
 
-/* =======================
-   CANVAS DEMO
-======================= */
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+// Ses düğmesi
+function updateSoundBtn(){
+  soundBtn.textContent = 'Geluid: '+(soundOn?'aan':'uit');
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  if(!soundOn){ bgm.volume=0; clickSfx.volume=0; }
+}
+updateSoundBtn();
 
-let x = 150, y = 150, vx = 3, vy = 2, r = 20, hue = 200;
-
-canvas.addEventListener("pointerdown", async () => {
-  await ensureAudioUnlocked();
-  if (soundOn){
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){}
+soundBtn.addEventListener('click', async ()=>{
+  soundOn = !soundOn; updateSoundBtn();
+  if(soundOn){
+    await ensureAudioUnlocked();
+    try{ await bgm.play(); fadeIn(bgm, 0.35, 800); }catch(e){ log('bgm resume err: '+e); }
+    try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
   }
-  vx *= 1.02; vy *= 1.02; hue = (hue + 30) % 360;
 });
 
-function draw(){
-  ctx.fillStyle = "#0e1627";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+// BGM Test (tek tıkla dener)
+bgmTest.addEventListener('click', async ()=>{
+  log('BGM Test clicked');
+  await tryPlayFirstAvailable();
+});
 
-  hue = (hue + 0.5) % 360;
-  ctx.beginPath();
-  ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.closePath();
-  ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
-  ctx.fill();
+// Basit canvas demo
+const canvas=document.getElementById('canvas'); const ctx2=canvas.getContext('2d');
+let x=150,y=150,vx=3,vy=2,r=20,h=200;
+canvas.addEventListener('pointerdown', async ()=>{
+  await ensureAudioUnlocked();
+  if(soundOn){ try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){ } }
+  vx*=1.02; vy*=1.02; h=(h+30)%360;
+});
+function draw(){ ctx2.fillStyle='#0e1627'; ctx2.fillRect(0,0,canvas.width,canvas.height);
+  h=(h+0.5)%360; ctx2.fillStyle=`hsl(${h},80%,60%)`; ctx2.beginPath(); ctx2.arc(x,y,r,0,Math.PI*2); ctx2.fill();
+  ctx2.strokeStyle='#1e2a44'; ctx2.lineWidth=2; ctx2.strokeRect(8,8,canvas.width-16,canvas.height-16); }
+function update(){ x+=vx; y+=vy; if(x-r<10||x+r>canvas.width-10) vx*=-1; if(y-r<10||y+r>canvas.height-10) vy*=-1; }
+(function loop(){ update(); draw(); requestAnimationFrame(loop); })();
 
-  ctx.strokeStyle = "#1e2a44";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(8,8,canvas.width-16,canvas.height-16);
-}
-
-function update(){
-  x += vx; y += vy;
-  if (x - r < 10 || x + r > canvas.width - 10) vx *= -1;
-  if (y - r < 10 || y + r > canvas.height - 10) vy *= -1;
-}
-
-function loop(){ update(); draw(); requestAnimationFrame(loop); }
-loop();
+log('JS ready');
 </script>
-
 </body>
 </html>
