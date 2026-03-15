@@ -25,8 +25,7 @@
     border:1px solid #1e2a44; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
   #hint{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
     color:#a8b3c7; opacity:.9; font-size:14px; text-align:center; }
-  #debug{ position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px;
-    max-width:70ch; white-space:pre-wrap; }
+  #debug{ position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px; max-width:70ch; white-space:pre-wrap; }
   .hidden{ display:none !important; }
 </style>
 </head>
@@ -61,22 +60,22 @@
   <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
 </div>
 
-<!-- AUDIO (NET & DOĞRU TANIM) -->
-<audio id="bgm" src="assets/audio/bgm_soft.wav" loop preload="auto"></audio>
-<audio id="clickSfx" src="assets/audio/click.wav" preload="auto"></audio>
+<!-- AUDIO (DOĞRU VE NET) -->
+<audio id="bgm"      src="assets/audio/bgm_soft.wav" loop preload="auto"></audio>
+<audio id="clickSfx" src="assets/audio/click.wav"     preload="auto"></audio>
 
 <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ===== BASİT & SAĞLAM ===== */
+/* =============== SAĞLAM SES AKIŞI =============== */
 let audioCtx = null;
 let soundOn  = true;
 
 const debugEl  = document.getElementById('debug');
 const log = (m)=>{ debugEl.textContent = String(m); };
 
-const bgm      = document.getElementById('bgm');       // <-- BGM burada (src ile)
-const clickSfx = document.getElementById('clickSfx');  // <-- Klik burada (src ile)
+const bgm      = document.getElementById('bgm');
+const clickSfx = document.getElementById('clickSfx');
 const startBtn = document.getElementById('startBtn');
 const skipBtn  = document.getElementById('skipBtn');
 const intro    = document.getElementById('intro');
@@ -96,11 +95,11 @@ async function ensureAudioUnlocked(){
     try { await ctx.resume(); } catch(e){ log('resume err: '+e); }
   }
 }
-// İlk dokunuşta bile kilidi aç (ek güvence)
+// İlk dokunuşta da kilidi açmayı dene (ek güvence)
 window.addEventListener('pointerdown', async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 
-// Fade‑in
-function fadeIn(aud, target=0.35, ms=1200){
+// Basit fade‑in helper
+function fadeIn(aud, target=0.35, ms=1000){
   try{
     aud.volume=0; const steps=20, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
     let i=0; const t=setInterval(()=>{ i++; aud.volume=Math.min(target, aud.volume+inc); if(i>=steps) clearInterval(t); }, dt);
@@ -124,17 +123,17 @@ soundBtn.addEventListener('click', async ()=>{
   }
 });
 
-// START (inline onclick için global)
+// START (inline onclick için global ve garanti)
 window.__startGame = async function(){
   log('Start clicked');
   try{
     await ensureAudioUnlocked();
-    bgm.currentTime = 0;          // Baştan
-    await bgm.play();             // Kullanıcı jestinde
-    fadeIn(bgm, 0.25, 800);       // Yumuşak giriş
+    bgm.currentTime = 0;
+    await bgm.play();           // kullanıcı jestinde
+    fadeIn(bgm, 0.35, 1000);
     try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
     intro.classList.add('hidden');
-    log('BGM playing (bgm_soft.wav)');
+    log('BGM playing → assets/audio/bgm_soft.wav');
   }catch(e){
     log('Start error: '+e);
     intro.classList.add('hidden');
@@ -147,7 +146,7 @@ skipBtn.addEventListener('click', ()=>{ intro.classList.add('hidden'); log('Skip
 // BGM Test
 bgmTest.addEventListener('click', async ()=>{
   log('BGM Test clicked');
-  try{ await ensureAudioUnlocked(); bgm.currentTime=0; await bgm.play(); fadeIn(bgm,0.25,600); log('BGM playing (Test)'); }
+  try{ await ensureAudioUnlocked(); bgm.currentTime=0; await bgm.play(); fadeIn(bgm,0.35,600); log('BGM playing (Test)'); }
   catch(e){ log('BGM test error: '+e); }
 });
 
