@@ -60,17 +60,20 @@
     <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
   </div>
 
-  <!-- AUDIO (DÜZGÜN TANIM) -->
+  <!-- AUDIO (DÜZGÜN TANIMLAR) -->
   <audio id="bgm" loop preload="auto"></audio>
   <audio id="clickSfx" preload="auto" src="assets/audio/click.wav"></audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ======== SAĞLAM KOD – ADIM ADIM LOG ======== */
+/* =======================
+   AUDIO & UI – SADE/SAĞLAM
+======================= */
 let audioCtx = null;
 let soundOn = true;
-const debugEl = document.getElementById('debug');
+
+const debugEl  = document.getElementById('debug');
 const log = (m)=>{ debugEl.textContent = String(m); };
 
 const bgm      = document.getElementById('bgm');
@@ -94,35 +97,58 @@ async function ensureAudioUnlocked(){
     try { await ctx.resume(); } catch(e){ log('resume err: '+e); }
   }
 }
-
-// Her ilk dokunuşta kilidi açmayı dene (garanti)
+// Her ilk dokunuşta kilidi aç (ek güvence)
 window.addEventListener('pointerdown', async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 
 // Basit fade‑in
-function fadeIn(aud, target=0.35, ms=2500){
+function fadeIn(aud, target=0.35, ms=2000){
   try{
-    aud.volume=0; const steps=25, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
+    aud.volume=0; const steps=24, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
     let i=0; const t=setInterval(()=>{ i++; aud.volume=Math.min(target, aud.volume+inc); if(i>=steps) clearInterval(t); }, dt);
   }catch(_){}
 }
 
-// BGM aday listesi (ilk çalışan seçilir)
-const BGM_LIST = ['assets/audio/bgm_soft.wav','assets/audio/bgm.wav','assets/audio/bgm_test.wav'];
-let chosenBgm = null;
+// BGM adayları: sende hangisi varsa sırayla denenir
+const BGM_LIST = [
+  'assets/audio/bgm_soft.wav',
+  'assets/audio/bgm.wav',
+  'assets/audio/bgm_test.wav'
+];
+
+async function waitCanPlay(audioEl, timeoutMs=3000){
+  return new Promise((resolve)=>{
+    let done=false;
+    const onOk = ()=>{ if(done) return; done=true; cleanup(); resolve(true); };
+    const onErr= ()=>{ if(done) return; done=true; cleanup(); resolve(false); };
+    const timer= setTimeout(()=>{ if(done) return; done=true; cleanup(); resolve(true); }, timeoutMs);
+    function cleanup(){
+      audioEl.removeEventListener('canplaythrough', onOk);
+      audioEl.removeEventListener('error', onErr);
+      clearTimeout(timer);
+    }
+    audioEl.addEventListener('canplaythrough', onOk, {once:true});
+    audioEl.addEventListener('error', onErr, {once:true});
+    audioEl.load(); // çalmadan önce yüklenme tetiklenir
+  });
+}
 
 async function tryPlayFirstAvailable(){
   await ensureAudioUnlocked();
   for(const url of BGM_LIST){
     try{
-      bgm.pause(); bgm.src = url; bgm.currentTime=0;
-      await bgm.play(); fadeIn(bgm, 0.35, 1500);
-      chosenBgm = url; log('BGM chosen & playing → '+url);
+      log('Trying: '+url);
+      bgm.pause(); bgm.src = url; bgm.currentTime = 0;
+      const ok = await waitCanPlay(bgm, 2500);
+      if(!ok){ log('Load failed: '+url); continue; }
+      await bgm.play();              // kullanıcı jestinde çağrılıyor
+      fadeIn(bgm, 0.35, 1500);
+      log('BGM playing → '+url);
       return true;
     }catch(e){
-      log('Tried: '+url+' | '+e);
+      log('Play failed: '+url+' | '+e);
     }
   }
-  log('No BGM playable. Make sure at least one exists under assets/audio/.');
+  log('Start done (no BGM)'); // Klik yine çalışır
   return false;
 }
 
@@ -130,13 +156,13 @@ async function tryPlayFirstAvailable(){
 window.__startGame = async function(){
   log('Start clicked');
   const ok = await tryPlayFirstAvailable();
-  // küçük klik ile teyit (başarısız olsa da hata atma)
+  // küçük klik ile teyit (başarısız olsa da intro kapanır)
   try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
   intro.classList.add('hidden');
-  if(!ok) log('Start done (no BGM).');
+  if(!ok) log('Start done (no BGM)');
 };
 
-// Ek listener (yedek)
+// Yedek listener
 startBtn.addEventListener('click', window.__startGame);
 
 // Overslaan
