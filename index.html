@@ -19,12 +19,17 @@
     #introContainer{
       position:fixed; inset:0; background:#000; display:flex;
       align-items:center; justify-content:center; flex-direction:column;
-      z-index:9999;
+      z-index:9999; color:#fff;
     }
-    #introVideo{ max-width:100%; max-height:100%; background:#000; }
-    #introControls{
-      position:absolute; bottom:4vh; display:flex; gap:12px;
+    #introBox{
+      max-width:min(92vw,900px);
+      padding:18px 20px; border:1px solid #fff3; border-radius:10px;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));
+      text-align:center; line-height:1.45;
     }
+    #introVideo{ max-width:100%; max-height:60vh; background:#000; display:block; margin:0 auto 8px; }
+    #introNote{ font-size:14px; color:#cfd8e3; margin-top:6px; }
+    #introControls{ margin-top:12px; display:flex; gap:12px; justify-content:center; }
     .introBtn{
       background:var(--glass); color:#fff; border:1px solid #fff;
       padding:10px 16px; cursor:pointer; border-radius:8px;
@@ -64,17 +69,29 @@
 
 <body>
 
-  <!-- INTRO: AI VEILIG GEBRUIK VIDEO -->
+  <!-- INTRO: AI VEILIG GEBRUIK -->
   <div id="introContainer" aria-label="Intro video overlay">
-    <video id="introVideo" playsinline autoplay muted controlslist="nodownload noplaybackrate">
+    <!-- Eğer intro.mp4 varsa video öğesi görünecek; yoksa bilgilendirme kutusu -->
+    <video id="introVideo" playsinline autoplay muted class="hidden">
       assets/intro/intro.mp4
-      <track src="assets/intro/ai-veilig-gebruik.vtt" kind="subtitles" srclang="nl" label="Nederlands" default>
+      assets/intro/ai-veilig-gebruik.vtt
       Uw browser ondersteunt de video niet.
     </video>
 
-    <div id="introControls" role="group" aria-label="Intro besturing">
-      <button class="introBtn" id="skipBtn">Overslaan</button>
-      <button class="introBtn" id="startBtn">Start</button>
+    <div id="introBox">
+      <h2 style="margin:6px 0 10px;">AI veilig en verantwoord gebruiken</h2>
+      <p style="margin:0;">
+        Deel geen gevoelige/vertrouwelijke informatie met AI-tools.<br/>
+        Controleer bronnen en vraag: <i>“Mag dit gedeeld worden?”</i><br/>
+        Volg bedrijfsrichtlijnen (AVG/GDPR, versleuteling, toegangsbeheer, logging).
+      </p>
+      <div id="introNote">
+        <span id="videoStatus">Introvideo is nog niet geüpload. U kunt direct starten.</span>
+      </div>
+      <div id="introControls" role="group" aria-label="Intro besturing">
+        <button class="introBtn" id="skipBtn">Overslaan</button>
+        <button class="introBtn" id="startBtn">Start</button>
+      </div>
     </div>
   </div>
 
@@ -93,13 +110,13 @@
     </div>
   </div>
 
-  <!-- AUDIO -->
+  <!-- AUDIO (WAV versies) -->
   <audio id="bgm" loop preload="auto">
-    assets/audio/bgm.mp3
+    assets/audio/bgm.wav
   </audio>
 
   <audio id="clickSfx" preload="auto">
-    assets/audio/click.mp3
+    assets/audio/click.wav
   </audio>
 
 <script>
@@ -116,7 +133,7 @@ const soundBtn = document.getElementById("soundBtn");
 function getAudioContext(){
   if (!audioCtx){
     const Ctx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new Ctx();
+    if (Ctx) audioCtx = new Ctx();
   }
   return audioCtx;
 }
@@ -153,6 +170,18 @@ const intro = document.getElementById("introContainer");
 const startBtn = document.getElementById("startBtn");
 const skipBtn  = document.getElementById("skipBtn");
 const introVideo = document.getElementById("introVideo");
+const videoStatus = document.getElementById("videoStatus");
+
+// Eğer video dosyası varsa <video> elementini göster
+(async () => {
+  try {
+    const res = await fetch('assets/intro/intro.mp4', { method: 'HEAD' });
+    if (res.ok) {
+      introVideo.classList.remove('hidden');
+      videoStatus.textContent = 'Introvideo wordt automatisch afgespeeld (zonder geluid).';
+    }
+  } catch(e) {}
+})();
 
 function hideIntro(){ intro.classList.add("hidden"); }
 
