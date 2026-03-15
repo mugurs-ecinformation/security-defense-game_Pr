@@ -43,9 +43,11 @@
       position:fixed; top:0; left:0; right:0; height:56px; display:flex;
       align-items:center; justify-content:space-between; padding:0 12px;
       background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0)); z-index:10;
+      gap:8px;
     }
     #brand{ font-weight:700; color:var(--accent); }
-    #soundBtn{
+    #btnGroup{ display:flex; gap:8px; align-items:center; }
+    .btn{
       background:var(--glass); color:var(--fg); border:1px solid #5a6b85;
       padding:8px 12px; border-radius:8px; cursor:pointer;
     }
@@ -63,6 +65,12 @@
     #hint{
       position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
       color:#a8b3c7; opacity:.9; font-size:14px; text-align:center;
+    }
+
+    /* DEBUG */
+    #debug{
+      position:fixed; left:8px; bottom:8px; color:#9bb0ca; font-size:12px;
+      max-width:60ch; white-space:pre-wrap;
     }
   </style>
 </head>
@@ -98,7 +106,10 @@
   <!-- TOP BAR -->
   <div id="topbar" role="toolbar" aria-label="Spel besturing">
     <div id="brand">🛡️ AI Security Defense</div>
-    <button id="soundBtn" type="button" aria-pressed="true">Geluid: aan</button>
+    <div id="btnGroup">
+      <button id="bgmTestBtn" class="btn" type="button">BGM Test (debug)</button>
+      <button id="soundBtn" class="btn" type="button" aria-pressed="true">Geluid: aan</button>
+    </div>
   </div>
 
   <!-- GAME AREA -->
@@ -119,6 +130,8 @@
     assets/audio/click.wav
   </audio>
 
+  <div id="debug" aria-live="polite"></div>
+
 <script>
 /* =======================
    AUDIO UNLOCK (NL)
@@ -129,6 +142,10 @@ let soundOn = true;
 const bgm = document.getElementById("bgm");
 const clickSfx = document.getElementById("clickSfx");
 const soundBtn = document.getElementById("soundBtn");
+const bgmTestBtn = document.getElementById("bgmTestBtn");
+const debugEl = document.getElementById("debug");
+
+function log(msg){ debugEl.textContent = String(msg); }
 
 function getAudioContext(){
   if (!audioCtx){
@@ -141,16 +158,25 @@ function getAudioContext(){
 async function unlockAudio(){
   const ctx = getAudioContext();
   if (ctx && ctx.state === "suspended"){
-    try { await ctx.resume(); } catch(e){}
+    try { await ctx.resume(); } catch(e){ log("resume err: "+e); }
   }
-  try { if (soundOn && bgm.paused) await bgm.play(); } catch(e){}
+  try {
+    if (soundOn){
+      bgm.volume = 1.0;           // SES MAKSİMUM
+      bgm.currentTime = 0;        // Baştan
+      await bgm.play();           // ZORLA BAŞLAT
+      log("BGM playing @ volume="+bgm.volume);
+    }
+  } catch(e){
+    log("BGM play error: "+e);
+  }
 }
 
 function updateSoundLabel(){
   soundBtn.textContent = "Geluid: " + (soundOn ? "aan" : "uit");
   soundBtn.setAttribute("aria-pressed", String(soundOn));
-  bgm.volume      = soundOn ? 0.35 : 0.0;
-  clickSfx.volume = soundOn ? 0.8  : 0.0;
+  bgm.volume      = soundOn ? 1.0 : 0.0;   // MAKSİMUM
+  clickSfx.volume = soundOn ? 1.0 : 0.0;   // MAKSİMUM
 }
 updateSoundLabel();
 
@@ -159,7 +185,16 @@ soundBtn.addEventListener("click", async () => {
   updateSoundLabel();
   if (soundOn){
     await unlockAudio();
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){}
+    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); }
+  }
+});
+
+// Debug butonu: kullanıcı jesti ile doğrudan BGM'yi çal
+bgmTestBtn.addEventListener("click", async () => {
+  try {
+    await unlockAudio();
+  } catch(e){
+    log("bgmTest err: "+e);
   }
 });
 
@@ -207,7 +242,7 @@ let x = 150, y = 150, vx = 3, vy = 2, r = 20, hue = 200;
 canvas.addEventListener("pointerdown", async () => {
   await unlockAudio();
   if (soundOn){
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){}
+    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); }
   }
   vx *= 1.02; vy *= 1.02; hue = (hue + 30) % 360;
 });
