@@ -121,9 +121,9 @@
     </div>
   </div>
 
-  <!-- AUDIO (WAV versies) -->
+  <!-- AUDIO (WAV versiyonu: TEST TONU) -->
   <audio id="bgm" loop preload="auto">
-    assets/audio/bgm.wav
+    assets/audio/bgm_test.wav
   </audio>
 
   <audio id="clickSfx" preload="auto">
@@ -162,9 +162,9 @@ async function unlockAudio(){
   }
   try {
     if (soundOn){
-      bgm.volume = 1.0;           // SES MAKSİMUM
-      bgm.currentTime = 0;        // Baştan
-      await bgm.play();           // ZORLA BAŞLAT
+      bgm.volume = 1.0;
+      bgm.currentTime = 0;
+      await bgm.play();
       log("BGM playing @ volume="+bgm.volume);
     }
   } catch(e){
@@ -175,8 +175,8 @@ async function unlockAudio(){
 function updateSoundLabel(){
   soundBtn.textContent = "Geluid: " + (soundOn ? "aan" : "uit");
   soundBtn.setAttribute("aria-pressed", String(soundOn));
-  bgm.volume      = soundOn ? 1.0 : 0.0;   // MAKSİMUM
-  clickSfx.volume = soundOn ? 1.0 : 0.0;   // MAKSİMUM
+  bgm.volume      = soundOn ? 1.0 : 0.0;
+  clickSfx.volume = soundOn ? 1.0 : 0.0;
 }
 updateSoundLabel();
 
@@ -191,11 +191,7 @@ soundBtn.addEventListener("click", async () => {
 
 // Debug butonu: kullanıcı jesti ile doğrudan BGM'yi çal
 bgmTestBtn.addEventListener("click", async () => {
-  try {
-    await unlockAudio();
-  } catch(e){
-    log("bgmTest err: "+e);
-  }
+  try { await unlockAudio(); } catch(e){ log("bgmTest err: "+e); }
 });
 
 /* =======================
