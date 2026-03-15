@@ -81,8 +81,8 @@
   <div id="introContainer" aria-label="Intro video overlay">
     <!-- Eğer intro.mp4 varsa video öğesi görünecek; yoksa bilgilendirme kutusu -->
     <video id="introVideo" playsinline autoplay muted class="hidden" controlslist="nodownload noplaybackrate">
-      <source src="assets/intro/intro.mp4" type="video/mp4" />
-      <track src="assets/intro/ai-veilig-gebruik.vtt" kind="subtitles" srclang="nl" label="Nederlands" default />
+      assets/intro/intro.mp4
+      assets/intro/ai-veilig-gebruik.vtt
       Uw browser ondersteunt de video niet.
     </video>
 
@@ -97,7 +97,6 @@
         <span id="videoStatus">Introvideo is nog niet geüpload. U kunt direct starten.</span>
       </div>
       <div id="introControls" role="group" aria-label="Intro besturing">
-        <!-- Yedek onclick: bazı durumlarda event listener yakalanmazsa garanti olsun -->
         <button class="introBtn" id="skipBtn">Overslaan</button>
         <button class="introBtn" id="startBtn" onclick="__startGame()">Start</button>
       </div>
@@ -122,13 +121,13 @@
     </div>
   </div>
 
-  <!-- AUDIO (WAV versiyonu: TEST TONU) -->
+  <!-- AUDIO (ambient versiyon) -->
   <audio id="bgm" loop preload="auto">
-    <source src="assets/audio/bgm_test.wav" type="audio/wav" />
+    assets/audio/bgm.wav
   </audio>
 
   <audio id="clickSfx" preload="auto">
-    <source src="assets/audio/click.wav" type="audio/wav" />
+    assets/audio/click.wav
   </audio>
 
   <div id="debug" aria-live="polite"></div>
@@ -170,13 +169,28 @@ async function ensureAudioUnlocked(){
   }
 }
 
-async function playBgm(){
+/* Fade-in helper: volume’u 0 → target’e duration ms’de taşı */
+function fadeIn(audioEl, target=0.35, duration=2500){
+  try {
+    audioEl.volume = 0.0;
+    const steps = 25;
+    const stepDur = Math.max(16, Math.floor(duration/steps));
+    let i = 0;
+    const inc = target/steps;
+    const timer = setInterval(()=>{
+      i++; audioEl.volume = Math.min(target, audioEl.volume + inc);
+      if(i>=steps){ clearInterval(timer); }
+    }, stepDur);
+  } catch(_) {}
+}
+
+async function playBgmSoft(){
   try {
     if (soundOn){
-      bgm.volume = 1.0;       // maksimum
-      bgm.currentTime = 0;    // baştan
-      await bgm.play();       // kullanıcı jestinde garanti
-      log("BGM playing @ volume=1");
+      bgm.currentTime = 0;           // baştan
+      await bgm.play();               // kullanıcı jestinde
+      fadeIn(bgm, 0.35, 2500);        // yumuşak giriş
+      log("BGM (ambient) playing with fade‑in");
     }
   } catch(e){
     log("BGM play error: "+e);
@@ -186,15 +200,21 @@ async function playBgm(){
 function updateSoundLabel(){
   soundBtn.textContent = "Geluid: " + (soundOn ? "aan" : "uit");
   soundBtn.setAttribute("aria-pressed", String(soundOn));
-  bgm.volume      = soundOn ? 1.0 : 0.0;
-  clickSfx.volume = soundOn ? 1.0 : 0.0;
+  if (!soundOn){ bgm.volume = 0.0; clickSfx.volume = 0.0; }
 }
 updateSoundLabel();
 
 soundBtn.addEventListener("click", async () => {
   soundOn = !soundOn;
   updateSoundLabel();
-  if (soundOn){ await ensureAudioUnlocked(); try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); } }
+  if (soundOn){
+    await ensureAudioUnlocked();
+    // tekrar açıldığında da çok sert olmasın diye hafif fade‑in
+    try { await bgm.play(); fadeIn(bgm, 0.35, 1200); } catch(e){ log("bgm resume err: "+e); }
+    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ /* sessiz kalabilir */ }
+  } else {
+    // istersen burada pause da edebiliriz: bgm.pause();
+  }
 });
 
 // Global jest: sayfada herhangi bir ilk tıklamada ses kilidini aç (ek destek)
@@ -207,7 +227,7 @@ window.addEventListener('pointerdown', async () => { await ensureAudioUnlocked()
 async function __startGame(){
   try {
     await ensureAudioUnlocked();
-    await playBgm();
+    await playBgmSoft();
     // küçük klik ile teyit
     try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(_){}
     hideIntro();
@@ -231,7 +251,6 @@ function hideIntro(){ intro.classList.add("hidden"); }
     if (res.ok) {
       introVideo.classList.remove('hidden');
       videoStatus.textContent = 'Introvideo wordt automatisch afgespeeld (zonder geluid).';
-      // Otomatik oynasın (muted); kullanıcı Start deyince ses açılacak
       try { await introVideo.play(); } catch(_){}
     }
   } catch(e) { /* video yoksa sorun değil */ }
@@ -248,7 +267,7 @@ let x = 150, y = 150, vx = 3, vy = 2, r = 20, hue = 200;
 canvas.addEventListener("pointerdown", async () => {
   await ensureAudioUnlocked();
   if (soundOn){
-    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ log("click play err: "+e); }
+    try { clickSfx.currentTime = 0; await clickSfx.play(); } catch(e){ /* sfx hata vermesin */ }
   }
   vx *= 1.02; vy *= 1.02; hue = (hue + 30) % 360;
 });
