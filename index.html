@@ -1,444 +1,299 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="utf-8" />
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI Security Defense – Cyberpunk Intro + Game</title>
+<title>AI Security Defense – Cyberpunk Edition + Final Game</title>
+
 <style>
   :root{
-    --bg:#0b0f1a; --fg:#e9eef8; --accent:#35c0ff; --glass:rgba(255,255,255,.12);
+    --bg:#0b0f1a; --fg:#e9eef8; --accent:#35c0ff;
     --neon1:#00e5ff; --neon2:#ff00d4; --neon3:#39ff14;
+    --glass:rgba(255,255,255,.12);
   }
   html,body{
-    height:100%; margin:0; background:var(--bg); color:var(--fg);
+    margin:0; padding:0; background:var(--bg); color:var(--fg);
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
     overflow:hidden;
   }
-  /* Top bar */
-  #topbar{
-    position:fixed; inset:0 0 auto 0; height:56px; z-index:20;
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:0 12px; background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0));
-  }
-  #brand{ font-weight:800; color:var(--accent); letter-spacing:.3px; }
   .btn{
     background:var(--glass); color:#fff; border:1px solid #5a6b85;
-    padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600;
+    padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600;
     backdrop-filter:blur(6px);
   }
   .btn:active{ transform:translateY(1px); }
-  /* Intro */
+
+  /* TOPBAR */
+  #topbar{
+    position:fixed; inset:0 0 auto 0; height:56px; z-index:20;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 12px; background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0));
+  }
+  #brand{ font-weight:800; color:var(--accent); }
+
+  /* INTRO */
   #intro{
-    position:fixed; inset:0; z-index:100;
-    background:radial-gradient(1200px 600px at 50% -200px, rgba(35,60,120,.35), transparent 60%), #000;
+    position:fixed; inset:0; z-index:1000;
+    background:radial-gradient(circle at center, #111b2f, #000);
     display:flex; align-items:center; justify-content:center;
   }
   #introBox{
-    width:min(92vw,900px); text-align:center; line-height:1.55;
-    padding:22px 22px 18px; border:1px solid #ffffff22; border-radius:12px;
-    background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0));
-    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    width:min(92vw,900px); text-align:center; line-height:1.5;
+    padding:22px; border:1px solid #ffffff22; border-radius:12px;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0));
   }
-  #introBtns{ display:flex; justify-content:center; gap:12px; margin-top:12px; }
-  /* Video (canvas animasyonu) */
+  #introBtns{ margin-top:18px; display:flex; gap:12px; justify-content:center; }
+
+  /* CYBERPUNK VIDEO OVERLAY */
   #videoOverlay{
-    position:fixed; inset:0; z-index:90; display:none;
-    background:linear-gradient(180deg,rgba(0,0,0,.65),#000 60%);
+    position:fixed; inset:0; z-index:900; display:none;
+    background:#000b; backdrop-filter:blur(4px);
     align-items:center; justify-content:center; flex-direction:column; gap:16px;
   }
   #vidCanvas{
-    width:min(92vw,1000px); height:min(56vw,560px); max-height:70vh; border-radius:14px;
-    border:1px solid #ffffff1a; background:#020710; box-shadow:0 16px 40px rgba(0,0,0,.6);
+    width:min(92vw,1000px); height:min(56vw,560px); max-height:70vh;
+    background:#020710; border-radius:14px; border:1px solid #ffffff22;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
   }
-  #vidCaption{
-    margin-top:6px; color:#cfe6ff; font-size:15px; text-align:center; opacity:.9;
-  }
-  /* Game */
-  #game{
-    position:fixed; inset:56px 0 0 0; display:flex; align-items:center; justify-content:center;
-  }
-  canvas#gameCanvas{
-    width:min(96vw,900px); height:min(68vh,560px); background:#0e1627;
-    border:1px solid #1e2a44; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35);
-  }
-  #hint{
-    position:fixed; left:50%; transform:translateX(-50%);
-    bottom:16px; font-size:14px; color:#a8b3c7; opacity:.9; text-align:center;
-  }
-  /* Utility */
-  .hidden{ display:none !important; }
-  #debug{
-    position:fixed; left:10px; bottom:10px; max-width:70ch;
-    color:#9bb0ca; font-size:12px; white-space:pre-wrap; opacity:.85;
-  }
+  #vidCaption{ color:#d0ecff; font-size:15px; }
+
+  /* GAME AREA START — Tüm eski oyunun HTML’i PART 2’de gelecek */
 </style>
 </head>
+
 <body>
 
-<!-- Top Bar -->
-<div id="topbar" role="toolbar" aria-label="Besturing">
+<div id="topbar">
   <div id="brand">🛡️ AI Security Defense</div>
-  <div>
-    <button id="soundBtn" class="btn" type="button" aria-pressed="true">Geluid: aan</button>
-  </div>
+  <button id="soundBtn" class="btn" aria-pressed="true">Geluid: aan</button>
 </div>
 
-<!-- Intro -->
-<div id="intro" aria-label="Intro">
+<!-- INTRO -->
+<div id="intro">
   <div id="introBox">
-    <h2 style="margin:.2em 0 .5em;color:var(--neon1);text-shadow:0 0 12px #00e5ff55;">AI veilig & verantwoord gebruiken</h2>
+    <h2 style="color:var(--neon1)">AI veilig & verantwoord gebruiken</h2>
     <p>
       Deel geen gevoelige/vertrouwelijke informatie met AI‑tools.<br/>
-      Controleer bronnen en vraag: <i>“Mag dit gedeeld worden?”</i><br/>
-      Volg bedrijfsrichtlijnen (AVG/GDPR, versleuteling, toegangsbeheer, logging).
+      Gebruik enkel goedgekeurde platformen (AVG / BIO / NIS2).
     </p>
     <div id="introBtns">
-      <button id="skipIntro" class="btn" type="button">Overslaan</button>
-      <button id="startBtn" class="btn" type="button">Start</button>
+      <button id="skipIntro" class="btn">Overslaan</button>
+      <button id="startIntro" class="btn">Start</button>
     </div>
   </div>
 </div>
 
-<!-- Cyberpunk "Video" (Canvas animasyonu) -->
-<div id="videoOverlay" aria-label="Awareness Video">
-  <canvas id="vidCanvas" width="1000" height="560" aria-label="Cyberpunk video"></canvas>
+<!-- CYBERPUNK VIDEO (canvas) -->
+<div id="videoOverlay">
+  <canvas id="vidCanvas" width="1000" height="560"></canvas>
   <div id="vidCaption">Cyber‑awareness intro…</div>
-  <div>
-    <button id="videoSkip" class="btn" type="button">Verder naar het spel</button>
+  <button id="videoSkip" class="btn">Verder naar het spel</button>
+</div>
+<!-- ============================
+     PART 2 — OLD GAME UI (HTML)
+     ============================ -->
+
+<style>
+  /* ---- Minimal tema (theme.css yerine) ---- */
+  :root{
+    --panel:#0e1627; --panel-brd:#1e2a44; --glass:rgba(255,255,255,.08);
+    --accent:#35c0ff; --muted:#9bb0ca;
+    --neon-blue:#00d9ff; --neon-green:#39ff14;
+  }
+  #game-container{
+    position:fixed; inset:56px 0 0 0; display:grid; gap:12px;
+    grid-template-columns: 1fr min(36%, 520px);
+    grid-template-rows: auto 1fr auto;
+    padding:12px;
+  }
+  #game-container .header{
+    grid-column:1 / span 2; display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); border:1px solid var(--panel-brd); border-radius:12px;
+    padding:10px 12px;
+  }
+  #game-container .header .title{
+    display:flex; align-items:center; gap:10px;
+  }
+  #game-container .header .controls{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  }
+  .toggle{
+    display:flex; align-items:center; gap:6px; background:var(--glass);
+    border:1px solid var(--panel-brd); padding:6px 8px; border-radius:8px;
+  }
+  .toggle input[type="text"], .toggle select, .toggle input[type="color"]{
+    background:#091124; color:#e9eef8; border:1px solid #203150; border-radius:6px; padding:6px 8px;
+  }
+  .toggle .mini{
+    padding:6px 10px; border-radius:6px; border:1px solid #395380; background:var(--glass); color:#fff; cursor:pointer;
+  }
+
+  .chat-panel{
+    min-height:200px; background:var(--panel); border:1px solid var(--panel-brd);
+    border-radius:12px; padding:10px; overflow:auto;
+  }
+  .chat-panel .muted{ color:var(--muted); font-size:12px; letter-spacing:.6px; }
+
+  .main-screen{
+    background:var(--panel); border:1px solid var(--panel-brd); border-radius:12px;
+    padding:12px; position:relative; overflow:hidden;
+  }
+  .terminal-text{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    min-height:280px; white-space:pre-wrap; color:#d9e7ff;
+    background:rgba(0,0,0,.25); border:1px solid #223456; border-radius:10px; padding:10px;
+  }
+  .action-zone{
+    display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
+  }
+  .choice-btn{
+    background:var(--glass); color:#fff; border:1px solid #395380;
+    padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700;
+  }
+  .choice-btn:hover{ border-color:#4b6ca8; box-shadow:0 0 0 2px rgba(53,192,255,.15) inset; }
+
+  .fact-box{
+    display:none; position:absolute; inset:auto 12px 12px 12px; z-index:5;
+    background:#0b1324; border:1px solid #2a3e66; border-radius:12px; padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  .fact-box h3{ margin:0 0 8px 0; color:var(--neon-blue); }
+
+  .end-modal{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+    align-items:center; justify-content:center; z-index:50;
+  }
+  .end-modal > div, .end-modal .content{
+    background:#0b1324; border:1px solid #2a3e66; border-radius:12px; padding:16px; min-width:min(92vw, 860px);
+  }
+  .end-modal h2{ margin-top:0; color:var(--neon-green); }
+  .summary{ display:grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); gap:10px; }
+  .sub{ color:#a8b3c7; font-size:12px; letter-spacing:.6px; }
+  .value{ font-weight:800; color:#fff; }
+  .badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+
+  .metrics{
+    grid-column:1 / span 2;
+    display:grid; gap:10px; grid-template-columns: repeat(3, minmax(200px, 1fr));
+    background:var(--panel); border:1px solid var(--panel-brd); border-radius:12px; padding:10px;
+  }
+  .metric-box{
+    border:1px solid #223456; border-radius:10px; padding:10px; background:rgba(0,0,0,.25);
+  }
+
+  #log-line{ color:#e9eef8; }
+  #status{ color:var(--accent); font-weight:700; }
+
+  /* Responsive */
+  @media (max-width: 1024px){
+    #game-container{ grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+    .metrics{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<!-- Audio assets (güvenli data URI; harici dosya yok) -->
+<audio id="snd-type" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+<audio id="snd-alarm" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+<audio id="snd-success" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
+<!-- === Eski Oyunun Tam HTML Yapısı (İÇERİK KORUNDU) === -->
+<div id="game-container" role="application" aria-label="AI Security Final Defense">
+  <div class="header">
+    <div class="title">
+      <img id="brand-logo" src="assets/logo.svg" alt="Logo" style="height:24px;" />
+      <div style="font-weight:bold; color:var(--neon-green)">[AI_SEC_CORE_v8.0]</div>
+      <div id="status" style="color:var(--accent); font-weight:600">STATUS: ACTIEF</div>
+    </div>
+
+    <div class="controls">
+      <label class="toggle" title="Corporate Mode">
+        <input type="checkbox" id="toggle-corp" />
+        <span id="lbl-corp">Corporate Mode (BIO/NIS2/AVG)</span>
+      </label>
+      <label class="toggle" title="Sound">
+        <input type="checkbox" id="toggle-sound" checked />
+        <span id="lbl-sound">Geluid aan</span>
+      </label>
+      <label class="toggle" title="Language">
+        <span id="lbl-lang">Taal</span>
+        <select id="lang-select">
+          <option value="nl">Nederlands</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <label class="toggle" title="Brand color">
+        <span id="lbl-brand">Merk‑kleur</span>
+        <input type="color" id="brand-color" value="#00d9ff" />
+      </label>
+      <label class="toggle" title="Logo URL">
+        <span id="lbl-logo">Logo</span>
+        <input type="text" id="logo-url" placeholder="assets/logo.svg" style="width:200px" />
+        <button id="btn-apply-logo" class="mini">OK</button>
+      </label>
+    </div>
+  </div>
+
+  <div class="chat-panel" id="chat-box" aria-live="polite">
+    <div id="lbl-comms" class="muted">COMMUNICATIELOGBOEK</div>
+  </div>
+
+  <div class="main-screen" id="main-display">
+    <div id="terminal-content" class="terminal-text"></div>
+
+    <div class="action-zone" id="choices-area">
+      <button class="choice-btn" id="btn-start">SYSTEEM STARTEN (Klik om te starten)</button>
+    </div>
+
+    <!-- Fact Modal -->
+    <div id="fact-card" class="fact-box" role="dialog" aria-modal="true">
+      <h3 id="fact-title">💡 Wist je dat? (Casestudy)</h3>
+      <p id="fact-text" style="white-space:pre-wrap"></p>
+      <button class="choice-btn" id="btn-close-fact">Ik begrijp het risico</button>
+    </div>
+
+    <!-- End Modal -->
+    <div id="end-modal" class="end-modal" role="dialog" aria-modal="true">
+      <div class="content">
+        <h2 id="end-title">Resultaten van de Operatie</h2>
+        <div class="summary">
+          <div><span class="sub" id="lbl-score1">NALEVINGSSCORE</span>: <span class="value" id="end-hp">—</span></div>
+          <div><span class="sub" id="lbl-score2">BEVEILIGDE DATAPAKKETTEN</span>: <span class="value" id="end-score" style="color:var(--neon-blue)">—</span></div>
+          <div><span class="sub" id="lbl-risk">RISICONIVEAU</span>: <span class="value" id="end-risk">—</span></div>
+          <div class="badges" id="earned-badges"></div>
+        </div>
+        <div id="decisions-list"></div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="choice-btn" id="btn-replay">↻ Opnieuw spelen</button>
+          <button class="choice-btn" id="btn-close-end">Sluiten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric-box">
+      <span class="sub" id="lbl-m1">NALEVINGSSCORE</span>
+      <div class="value" id="hp-val">100%</div>
+    </div>
+    <div class="metric-box">
+      <span class="sub" id="lbl-m2">BEVEILIGDE DATAPAKKETTEN</span>
+      <div class="value" id="score-val" style="color:var(--neon-blue)">0</div>
+    </div>
+    <div class="metric-box">
+      <span class="sub" id="lbl-m3">RISICONIVEAU</span>
+      <div class="value" id="risk-val">LAAG</div>
+    </div>
+    <div style="grid-column:1 / span 3; margin-top:10px;">
+      <span class="sub" id="lbl-log">SYSTEEMLOG:</span>
+      <span id="log-line">Wachten op operatorauthenticatie...</span>
+      <div class="badges" id="live-badges"></div>
+    </div>
   </div>
 </div>
-
-<!-- Game -->
-<div id="game" role="main" aria-label="Spel">
-  <canvas id="gameCanvas" width="900" height="560" aria-label="Speelveld"></canvas>
-</div>
-<div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na de video.</div>
-
-<div id="debug" aria-live="polite"></div>
-
-<script>
-/* ===========================================================
-   AUDIO – WebAudio ile dosyasız, platform-uyumlu sesler
-   =========================================================== */
-let audioCtx = null, masterGain = null, bgmGain = null, bgmNodes = [];
-let soundOn = true;
-const debugEl = document.getElementById('debug');
-const log = (m)=>{ debugEl.textContent = String(m); };
-
-function ensureAudio(){
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) { log('AudioContext not supported'); return; }
-    audioCtx = new Ctx();
-    masterGain = audioCtx.createGain(); masterGain.gain.value = 0.9; masterGain.connect(audioCtx.destination);
-    bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.0; bgmGain.connect(masterGain);
-  }
-}
-async function unlockAudio(){ ensureAudio(); if(audioCtx && audioCtx.state==='suspended'){ try{ await audioCtx.resume(); }catch(e){ log('resume err: '+e); } }}
-
-// Modern UI click (daha kaliteli “tık”): kısa, hi‑pass blip
-function playClick(){
-  if(!soundOn) return;
-  ensureAudio();
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = 'triangle';
-  o.frequency.value = 880; // baş frekans
-  // hızlı pitch drop
-  const now = audioCtx.currentTime;
-  o.frequency.setValueAtTime(880, now);
-  o.frequency.exponentialRampToValueAtTime(220, now + 0.08);
-  g.gain.setValueAtTime(0.0, now);
-  g.gain.linearRampToValueAtTime(0.25, now + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-  const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=600;
-  o.connect(hp); hp.connect(g); g.connect(masterGain);
-  o.start(now); o.stop(now + 0.14);
-}
-
-// Start SFX: kısa “whoosh + ping” cyber efekti
-function playStart(){
-  if(!soundOn) return;
-  ensureAudio();
-  const now = audioCtx.currentTime;
-
-  // whoosh (noise + LP sweep)
-  const noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate*0.4, audioCtx.sampleRate);
-  const data = noiseBuf.getChannelData(0);
-  for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1)*Math.pow(1-i/data.length, 1.5); }
-  const noise = audioCtx.createBufferSource(); noise.buffer = noiseBuf;
-  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(400, now);
-  lp.frequency.exponentialRampToValueAtTime(4000, now+0.35);
-  const g1 = audioCtx.createGain(); g1.gain.setValueAtTime(0.0, now);
-  g1.gain.linearRampToValueAtTime(0.6, now+0.05);
-  g1.gain.exponentialRampToValueAtTime(0.0001, now+0.42);
-  noise.connect(lp).connect(g1).connect(masterGain);
-  noise.start(now); noise.stop(now+0.42);
-
-  // ping (synth)
-  const o = audioCtx.createOscillator(); const g2 = audioCtx.createGain();
-  o.type='sine'; o.frequency.setValueAtTime(1200, now+0.1);
-  o.frequency.exponentialRampToValueAtTime(600, now+0.32);
-  g2.gain.setValueAtTime(0, now+0.1);
-  g2.gain.linearRampToValueAtTime(0.5, now+0.12);
-  g2.gain.exponentialRampToValueAtTime(0.0001, now+0.4);
-  o.connect(g2).connect(masterGain);
-  o.start(now+0.1); o.stop(now+0.42);
-}
-
-// BGM: cyberpunk pad (detune + slow filter), döngü
-function startBgm(){
-  ensureAudio();
-  stopBgm(); // temiz başlat
-  const now = audioCtx.currentTime;
-
-  function makeVoice(freq, detune){
-    const o = audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=freq; o.detune.value=detune;
-    const g = audioCtx.createGain(); g.gain.value=0.0;
-    const lp=audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600; lp.Q.value=0.8;
-    o.connect(lp).connect(g).connect(bgmGain);
-    o.start();
-    // LFO benzeri yumuşak titreşim
-    const mod = audioCtx.createOscillator(); mod.type='sine'; mod.frequency.value=0.075;
-    const modGain = audioCtx.createGain(); modGain.gain.value=40;
-    mod.connect(modGain).connect(o.detune); mod.start();
-    // yumuşak fade-in
-    g.gain.linearRampToValueAtTime(0.18, now+2.5);
-    return {o,g,lp,mod,modGain};
-  }
-  const v1 = makeVoice(110, -7);  // A2
-  const v2 = makeVoice(220, +7);  // A3
-  bgmNodes.push(v1, v2);
-
-  // master bgm gain fade-in
-  bgmGain.gain.cancelScheduledValues(now);
-  bgmGain.gain.linearRampToValueAtTime(0.35, now+2.2);
-}
-function stopBgm(){
-  const now = audioCtx?.currentTime || 0;
-  if(bgmNodes.length){
-    for(const n of bgmNodes){
-      try{ n.g.gain.linearRampToValueAtTime(0.0001, now+0.6); }catch(_){}
-      try{ n.o.stop(now+0.65); n.mod.stop(now+0.65); }catch(_){}
-    }
-    bgmNodes = [];
-  }
-  if(bgmGain){
-    try{
-      bgmGain.gain.cancelScheduledValues(now);
-      bgmGain.gain.linearRampToValueAtTime(0.0, now+0.7);
-    }catch(_){}
-  }
-}
-
-/* ===========================================================
-   UI – Akış: Intro → Cyberpunk Video → Oyun
-   =========================================================== */
-const introEl = document.getElementById('intro');
-const startBtn = document.getElementById('startBtn');
-const skipIntro = document.getElementById('skipIntro');
-
-const videoOverlay = document.getElementById('videoOverlay');
-const vidCanvas = document.getElementById('vidCanvas');
-const vidCaption = document.getElementById('vidCaption');
-const videoSkip = document.getElementById('videoSkip');
-
-const soundBtn = document.getElementById('soundBtn');
-
-window.addEventListener('pointerdown', unlockAudio, {once:true});
-window.addEventListener('keydown', unlockAudio, {once:true});
-
-soundBtn.addEventListener('click', async ()=>{
-  soundOn = !soundOn;
-  soundBtn.textContent = 'Geluid: ' + (soundOn ? 'aan' : 'uit');
-  if(!soundOn){ stopBgm(); }
-  else { await unlockAudio(); startBgm(); }
-});
-
-skipIntro.addEventListener('click', ()=>{
-  introEl.classList.add('hidden');
-  // doğrudan oyuna geçmek istersen:
-  // startGame();
-  // ancak talep: önce video → sonra oyun
-  showVideo();
-});
-
-startBtn.addEventListener('click', async ()=>{
-  await unlockAudio();
-  playStart(); // start efekti
-  introEl.classList.add('hidden');
-  showVideo();
-});
-
-/* ===========================================================
-   Video (Canvas) – Cyberpunk awareness animasyonu
-   =========================================================== */
-let vidReq = null, vidStart = 0;
-function showVideo(){
-  videoOverlay.style.display = 'flex';
-  startCyberVideo();
-}
-function hideVideo(){
-  videoOverlay.style.display = 'none';
-  stopCyberVideo();
-  startGame();
-}
-function startCyberVideo(){
-  const ctx = vidCanvas.getContext('2d');
-  let t = 0;
-  vidStart = performance.now();
-
-  const scanAlpha = 0.08;
-  const gradient = ctx.createLinearGradient(0,0,vidCanvas.width,vidCanvas.height);
-  gradient.addColorStop(0,'#0a1124'); gradient.addColorStop(1,'#12051f');
-
-  const messages = [
-    "GEEN GEVOELIGE DATA INVOEREN IN AI‑TOOLS",
-    "NOOIT: wachtwoorden, persoonsgegevens, klantgegevens",
-    "Check altijd: Mag dit gedeeld worden?",
-    "Gebruik alleen goedgekeurde AI‑platformen",
-    "AVG/GDPR → dataminimalisatie, logging, toegangsbeheer",
-  ];
-
-  function drawHexGrid(off){
-    const s = 24, w = vidCanvas.width, h = vidCanvas.height;
-    ctx.strokeStyle = 'rgba(0,255,255,0.12)'; ctx.lineWidth = 1;
-    for(let y=-s; y<h+s; y+=s*0.86){
-      const shift = ((y/s)|0)%2 ? s/2 : 0;
-      for(let x=-s; x<w+s; x+=s){
-        ctx.beginPath();
-        const cx = x + shift + (off% (s*2));
-        const cy = y + ((off*0.5) % (s*1.72));
-        const r = s * 0.55;
-        for(let i=0;i<6;i++){
-          const a = Math.PI/3*i;
-          const px = cx + r*Math.cos(a), py = cy + r*Math.sin(a);
-          if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-        }
-        ctx.closePath(); ctx.stroke();
-      }
-    }
-  }
-  function drawScanlines(){
-    ctx.fillStyle = `rgba(255,255,255,${scanAlpha})`;
-    for(let y=0; y<vidCanvas.height; y+=2) ctx.fillRect(0,y,vidCanvas.width,1);
-  }
-  function glitchText(text, y, baseColor){
-    ctx.font = '700 36px Segoe UI, Roboto, Arial';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    // layer 1 (cyan)
-    ctx.fillStyle = 'rgba(0,255,255,0.7)';
-    ctx.fillText(text, vidCanvas.width/2 + Math.sin(t*0.06)*2, y+1);
-    // layer 2 (magenta)
-    ctx.fillStyle = 'rgba(255,0,200,0.6)';
-    ctx.fillText(text, vidCanvas.width/2 - Math.cos(t*0.07)*2, y-1);
-    // main
-    ctx.strokeStyle = baseColor; ctx.lineWidth = 1.6;
-    ctx.strokeText(text, vidCanvas.width/2, y);
-    ctx.fillStyle = baseColor;
-    ctx.fillText(text, vidCanvas.width/2, y);
-  }
-
-  function loop(now){
-    t = (now - vidStart)/16.666; // ~frames
-    // arka plan gradient
-    ctx.fillStyle = gradient; ctx.fillRect(0,0,vidCanvas.width,vidCanvas.height);
-
-    // hareketli grid
-    drawHexGrid(t*0.9);
-
-    // neon kenar parıltısı
-    ctx.shadowColor = '#00e5ff55'; ctx.shadowBlur = 24;
-    ctx.strokeStyle = '#00e5ff44'; ctx.lineWidth = 2;
-    ctx.strokeRect(14,14,vidCanvas.width-28,vidCanvas.height-28);
-    ctx.shadowBlur = 0;
-
-    // metin akışı
-    const idx = Math.min(messages.length-1, Math.floor(t/90)); // ~1.5sn/mesaj
-    const text = messages[idx];
-    glitchText('CYBER AWARENESS', 110, '#dff7ff');
-    glitchText(text, vidCanvas.height/2, '#e6f3ff');
-
-    // alt bilgilendirme
-    ctx.font = '600 16px Segoe UI, Roboto, Arial';
-    ctx.fillStyle = '#9bd4ff'; ctx.textAlign='center';
-    ctx.fillText('Deel nooit gevoelige data. Vraag altijd: “Mag dit gedeeld worden?”', vidCanvas.width/2, vidCanvas.height-44);
-
-    // scanlines + noise
-    drawScanlines();
-    const noise = (Math.random()*14)|0;
-    if(noise>12){
-      ctx.globalCompositeOperation='lighter';
-      ctx.fillStyle='rgba(255,255,255,0.06)';
-      for(let i=0;i<12;i++){
-        const nx = Math.random()*vidCanvas.width;
-        const ny = Math.random()*vidCanvas.height;
-        ctx.fillRect(nx,ny,2,2);
-      }
-      ctx.globalCompositeOperation='source-over';
-    }
-
-    // altyazı
-    vidCaption.textContent = 'Cyberpunk intro – druk op “Verder naar het spel” om door te gaan';
-
-    // otomatik bitiş ~ 15 saniye
-    if((now - vidStart) > 15000){
-      hideVideo();
-      return;
-    }
-    vidReq = requestAnimationFrame(loop);
-  }
-  vidReq = requestAnimationFrame(loop);
-}
-function stopCyberVideo(){
-  if(vidReq){ cancelAnimationFrame(vidReq); vidReq = null; }
-}
-videoSkip.addEventListener('click', hideVideo);
-
-/* ===========================================================
-   GAME – Basit tuş / klik etkileşimli canvas
-   =========================================================== */
-const gCanvas = document.getElementById('gameCanvas');
-const g = gCanvas.getContext('2d');
-let x=150,y=150,vx=3,vy=2,r=20,h=200;
-
-function startGame(){
-  // BGM başlat
-  unlockAudio().then(()=>{ if(soundOn) startBgm(); });
-  // Loop zaten çalışıyor; intro ve video kapalı
-}
-
-gCanvas.addEventListener('pointerdown', ()=>{
-  // güzel klik sesi
-  playClick();
-  vx*=1.03; vy*=1.03; h=(h+30)%360;
-});
-
-function drawGame(){
-  g.fillStyle='#0e1627'; g.fillRect(0,0,gCanvas.width,gCanvas.height);
-  h=(h+0.5)%360;
-  g.fillStyle=`hsl(${h},80%,60%)`;
-  g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
-  g.strokeStyle='#1e2a44'; g.lineWidth=2; g.strokeRect(8,8,gCanvas.width-16,gCanvas.height-16);
-}
-function updateGame(){
-  x+=vx; y+=vy;
-  if(x-r<10||x+r>gCanvas.width-10) vx*=-1;
-  if(y-r<10||y+r>gCanvas.height-10) vy*=-1;
-}
-(function gameloop(){
-  updateGame(); drawGame(); requestAnimationFrame(gameloop);
-})();
-
-// İlk mesaj
-log('Klaar: Start → cyberpunk video → spel. Geluid WebAudio ile.');
-
-/* Erişilebilirlik: klavye odak/space ile tetik */
-document.addEventListener('keydown',(e)=>{
-  if(e.code==='Space'){
-    playClick();
-  }
-});
-</script>
-</body>
-</html>
+<!-- ==== /Eski oyun HTML sonu ==== -->
