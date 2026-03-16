@@ -1,69 +1,111 @@
-<!DOCTYPE html>
-<html lang="nl">
+<!-- (Opsiyonel) TOP BAR -->
+<div id="topbar">
+  <div id="brand">🛡️ AI Security Defense</div>
+</div>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Security Defense – Cyberpunk Edition</title>
+<!-- OYUN ARAYÜZÜ -->
+<div id="game-container" role="application" aria-label="AI Security Final Defense">
+  <div class="header">
+    <div class="title">
+      <img id="brand-logo" src="assets/logo.svg" alt="Logo" style="height:24px;" />
+      <div style="font-weight:bold; color:var(--neon-green)">[AI_SEC_CORE_v8.0]</div>
+      <div id="status" style="color:var(--accent); font-weight:600">STATUS: ACTIEF</div>
+    </div>
 
-  <!-- STYLE -->
-  <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-
-  <!-- ======================================================
-       BÖLÜM 1 — FUTURISTIC AI DEFENSE INTRO
-       ====================================================== -->
-  <div id="intro" class="ai-intro">
-    <div class="ai-frame">
-
-      <div class="ai-header">
-        <span class="ai-dot red"></span>
-        <span class="ai-dot yellow"></span>
-        <span class="ai-dot green"></span>
-      </div>
-
-      <h1 class="ai-title">AI SECURITY DEFENSE SYSTEM</h1>
-
-      <p class="ai-sub">
-        ⚠ GEVOELIGE DATA DETECTIE ACTIEF  
-        <br />
-        ⚠ UNAUTHORIZED AI-USAGE SCAN INITIATED
-      </p>
-
-      <div class="ai-loader"></div>
-
-      <div class="ai-buttons">
-        <button id="skipIntro" class="ai-btn ghost">Overslaan</button>
-        <button id="startIntro" class="ai-btn start">Beveiligingsscan starten</button>
-      </div>
-
+    <div class="controls">
+      <label class="toggle" title="Corporate Mode">
+        <input type="checkbox" id="toggle-corp" />
+        <span id="lbl-corp">Corporate Mode (BIO/NIS2/AVG)</span>
+      </label>
+      <label class="toggle" title="Sound">
+        <input type="checkbox" id="toggle-sound" checked />
+        <span id="lbl-sound">Geluid aan</span>
+      </label>
+      <label class="toggle" title="Language">
+        <span id="lbl-lang">Taal</span>
+        <select id="lang-select">
+          <option value="nl">Nederlands</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <label class="toggle" title="Brand color">
+        <span id="lbl-brand">Merk‑kleur</span>
+        <input type="color" id="brand-color" value="#00d9ff" />
+      </label>
+      <label class="toggle" title="Logo URL">
+        <span id="lbl-logo">Logo</span>
+        <input type="text" id="logo-url" placeholder="assets/logo.svg" style="width:200px" />
+        <button id="btn-apply-logo" class="mini">OK</button>
+      </label>
     </div>
   </div>
 
-  <!-- ======================================================
-       BÖLÜM 1.5 — VIDEO OVERLAY
-       ====================================================== -->
-  <div id="videoOverlay">
-    <canvas id="vidCanvas" width="1000" height="560"></canvas>
-    <div id="vidCaption">Cyber‑awareness intro…</div>
-    <button id="videoSkip" class="btn">Verder</button>
+  <div class="chat-panel" id="chat-box" aria-live="polite">
+    <div id="lbl-comms" class="muted">COMMUNICATIELOGBOEK</div>
   </div>
 
-  <!-- ======================================================
-       BÖLÜM 2 → Tüm oyun UI (hiçbir değişiklik yok)
-       ====================================================== -->
+  <div class="main-screen" id="main-display">
+    <div id="terminal-content" class="terminal-text"></div>
 
-  <div id="game-container" role="application">
-      <!-- SENİN ORİJİNAL OYUN HTML’İNİN TAMAMI -->
-      <!-- Buraya hiç dokunmadım — tamamen korundu -->
-      <!-- (TAM HTML OYUN BLOĞU BURADA — karakter sınırı nedeniyle göstermek zor)
-           Ama merak etme, script.js içinde tüm logic duruyor. -->
+    <div class="action-zone" id="choices-area">
+      <!-- Intro+Video sonrası otomatik akış var; bu buton opsiyonel -->
+      <button class="choice-btn" id="btn-start">SYSTEEM STARTEN (Klik om te starten)</button>
+    </div>
+
+    <!-- Fact Modal -->
+    <div id="fact-card" class="fact-box" role="dialog" aria-modal="true">
+      <h3 id="fact-title">💡 Wist je dat? (Casestudy)</h3>
+      <p id="fact-text" style="white-space:pre-wrap"></p>
+      <button class="choice-btn" id="btn-close-fact">Ik begrijp het risico</button>
+    </div>
+
+    <!-- End Modal -->
+    <div id="end-modal" class="end-modal" role="dialog" aria-modal="true">
+      <div class="content">
+        <h2 id="end-title">Resultaten van de Operatie</h2>
+        <div class="summary">
+          <div><span class="sub" id="lbl-m1">NALEVINGSSCORE</span>: <span class="value" id="end-hp">—</span></div>
+          <div><span class="sub" id="lbl-m2">BEVEILIGDE DATAPAKKETTEN</span>: <span class="value" id="end-score" style="color:var(--neon-blue)">—</span></div>
+          <div><span class="sub" id="lbl-risk">RISICONIVEAU</span>: <span class="value" id="end-risk">—</span></div>
+          <div class="badges" id="earned-badges"></div>
+        </div>
+        <div id="decisions-list"></div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="choice-btn" id="btn-replay">↻ Opnieuw spelen</button>
+          <button class="choice-btn" id="btn-close-end">Sluiten</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- SCRIPT -->
-  <script src="script.js"></script>
-</body>
+  <div class="metrics">
+    <div class="metric-box">
+      <span class="sub" id="lbl-m1">NALEVINGSSCORE</span>
+      <div class="value" id="hp-val">100%</div>
+    </div>
+    <div class="metric-box">
+      <span class="sub" id="lbl-m2">BEVEILIGDE DATAPAKKETTEN</span>
+      <div class="value" id="score-val" style="color:var(--neon-blue)">0</div>
+    </div>
+    <div class="metric-box">
+      <span class="sub" id="lbl-m3">RISICONIVEAU</span>
+      <div class="value" id="risk-val">LAAG</div>
+    </div>
+    <div style="grid-column:1 / span 3; margin-top:10px;">
+      <span class="sub" id="lbl-log">SYSTEEMLOG:</span>
+      <span id="log-line">Wachten op operatorauthenticatie...</span>
+      <div class="badges" id="live-badges"></div>
+    </div>
+  </div>
+</div>
 
-</html>
+<!-- Audio (data URI – harici dosya gerekmez) -->
+<audio id="snd-type" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+<audio id="snd-alarm" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+<audio id="snd-success" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
