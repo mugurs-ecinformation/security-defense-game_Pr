@@ -1,0 +1,475 @@
+/* ======================================================
+   GLOBAL THEME
+   ====================================================== */
+
+:root{
+  --bg:#0b0f1a;
+  --fg:#e9eef8;
+  --accent:#35c0ff;
+  --neon1:#00e5ff;
+  --neon2:#ff00d4;
+  --neon3:#39ff14;
+  --glass:rgba(255,255,255,.12);
+
+  --panel:#0e1627;
+  --panel-brd:#1e2a44;
+  --muted:#9bb0ca;
+  --neon-blue:#00d9ff;
+  --neon-green:#39ff14;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  overflow:hidden;
+}
+
+/* ======================================================
+   BÖLÜM 1 — FUTURISTIC AI DEFENSE INTRO
+   ====================================================== */
+
+.ai-intro {
+  position: fixed;
+  inset: 0;
+  background: #02060e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.ai-frame {
+  width: min(92vw, 820px);
+  padding: 32px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.2));
+  border: 1px solid #233043;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.ai-header {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.ai-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.ai-dot.red { background: #ff3155; }
+.ai-dot.yellow { background: #ffdd44; }
+.ai-dot.green { background: #00ff6e; }
+
+.ai-title {
+  font-size: 32px;
+  color: #35c0ff;
+  font-weight: 800;
+  margin-bottom: 8px;
+  text-shadow: 0 0 16px #35c0ff;
+}
+
+.ai-sub {
+  font-size: 15px;
+  color: #ff355b;
+  margin-bottom: 22px;
+  animation: alertPulse 1.6s infinite;
+}
+
+.ai-loader {
+  width: 80%;
+  height: 6px;
+  margin: 0 auto 22px auto;
+  background: #0a1322;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ai-loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg,#36e1ff,#2f8bff);
+  animation: loadMove 1.4s infinite linear;
+}
+
+.ai-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.ai-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #35c0ff;
+  background: rgba(0,0,0,0.25);
+  color: #d8ecff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.25s;
+}
+
+.ai-btn:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes alertPulse {
+  0%,100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes loadMove {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* ======================================================
+   BÖLÜM 1.5 — CYBER VIDEO OVERLAY
+   ====================================================== */
+
+#videoOverlay{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  display:none;
+  background:#000b;
+  backdrop-filter:blur(4px);
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:16px;
+}
+
+#vidCanvas{
+  width:min(92vw,1000px);
+  height:min(56vw,560px);
+  max-height:70vh;
+  background:#020710;
+  border-radius:14px;
+  border:1px solid #ffffff22;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+}
+
+#vidCaption{
+  color:#d0ecff;
+  font-size:15px;
+}
+
+.btn{
+  background:var(--glass);
+  color:#fff;
+  border:1px solid #5a6b85;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  backdrop-filter:blur(6px);
+}
+
+/* ======================================================
+   TOPBAR
+   ====================================================== */
+
+#topbar{
+  position:fixed;
+  inset:0 0 auto 0;
+  height:56px;
+  z-index:20;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 12px;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0));
+}
+
+#brand{
+  font-weight:800;
+  color:var(--accent);
+}
+
+/* ======================================================
+   BÖLÜM 2 — OYUN ARAYÜZÜ
+   ====================================================== */
+
+#game-container{
+  position:fixed;
+  inset:56px 0 0 0;
+  display:grid;
+  gap:12px;
+  grid-template-columns: 1fr min(36%, 520px);
+  grid-template-rows: auto 1fr auto;
+  padding:12px;
+}
+
+#game-container .header{
+  grid-column:1 / span 2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--panel);
+  border:1px solid var(--panel-brd);
+  border-radius:12px;
+  padding:10px 12px;
+}
+
+#game-container .header .title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#game-container .header .controls{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+
+/* Toggles */
+.toggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:var(--glass);
+  border:1px solid var(--panel-brd);
+  padding:6px 8px;
+  border-radius:8px;
+}
+
+.toggle input[type="text"],
+.toggle select,
+.toggle input[type="color"]{
+  background:#091124;
+  color:#e9eef8;
+  border:1px solid #203150;
+  border-radius:6px;
+  padding:6px 8px;
+}
+
+.toggle .mini{
+  padding:6px 10px;
+  border-radius:6px;
+  border:1px solid #395380;
+  background:var(--glass);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* Chat panel */
+.chat-panel{
+  min-height:200px;
+  background:var(--panel);
+  border:1px solid var(--panel-brd);
+  border-radius:12px;
+  padding:10px;
+  overflow:auto;
+}
+
+.chat-panel .muted{
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:.6px;
+}
+
+/* Main screen */
+.main-screen{
+  background:var(--panel);
+  border:1px solid var(--panel-brd);
+  border-radius:12px;
+  padding:12px;
+  position:relative;
+  overflow:hidden;
+}
+
+.terminal-text{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  min-height:280px;
+  white-space:pre-wrap;
+  color:#d9e7ff;
+  background:rgba(0,0,0,.25);
+  border:1px solid #223456;
+  border-radius:10px;
+  padding:10px;
+}
+
+/* Choices */
+.action-zone{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.choice-btn{
+  background:var(--glass);
+  color:#fff;
+  border:1px solid #395380;
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.choice-btn:hover{
+  border-color:#4b6ca8;
+  box-shadow:0 0 0 2px rgba(53,192,255,.15) inset;
+}
+
+/* Fact modal */
+.fact-box{
+  display:none;
+  position:absolute;
+  inset:auto 12px 12px 12px;
+  z-index:5;
+  background:#0b1324;
+  border:1px solid #2a3e66;
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+
+.fact-box h3{
+  margin:0 0 8px 0;
+  color:var(--neon-blue);
+}
+
+/* End modal */
+.end-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+
+.end-modal > div,
+.end-modal .content{
+  background:#0b1324;
+  border:1px solid #2a3e66;
+  border-radius:12px;
+  padding:16px;
+  min-width:min(92vw, 860px);
+}
+
+.end-modal h2{
+  margin-top:0;
+  color:var(--neon-green);
+}
+
+.summary{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap:10px;
+}
+
+.sub{
+  color:#a8b3c7;
+  font-size:12px;
+  letter-spacing:.6px;
+}
+
+.value{
+  font-weight:800;
+  color:#fff;
+}
+
+.badges{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+/* Metrics */
+.metrics{
+  grid-column:1 / span 2;
+  display:grid;
+  gap:10px;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  background:var(--panel);
+  border:1px solid var(--panel-brd);
+  border-radius:12px;
+  padding:10px;
+}
+
+.metric-box{
+  border:1px solid #223456;
+  border-radius:10px;
+  padding:10px;
+  background:rgba(0,0,0,.25);
+}
+
+#log-line{
+  color:#e9eef8;
+}
+
+#status{
+  color:var(--accent);
+  font-weight:700;
+}
+
+/* Scanner */
+.scanner{
+  background:#0e1627;
+  border:1px solid #1e2a44;
+  border-radius:12px;
+  padding:10px;
+}
+
+.sc-head{
+  display:flex;
+  justify-content:space-between;
+  color:#9bb0ca;
+  margin-bottom:6px;
+}
+
+.sc-stream{
+  position:relative;
+  height:220px;
+  background:#091124;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.packet{
+  position:absolute;
+  top:-25px;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:6px;
+  background:#0c1a2f;
+  color:#d8ecff;
+  border:1px solid #395380;
+  animation: drop 5s linear forwards;
+}
+
+.packet.safe{
+  border-color:#2a6fff;
+  color:#8bc5ff;
+}
+
+.packet.danger{
+  border-color:#ff4d6d;
+  color:#ff6e90;
+  box-shadow:0 0 12px #ff2955aa;
+}
+
+@keyframes drop{
+  0% { transform: translateY(-20px); }
+  100% { transform: translateY(260px); }
+}
+
+/* Responsive */
+@media (max-width: 1024px){
+  #game-container{
