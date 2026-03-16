@@ -60,14 +60,14 @@
     <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
   </div>
 
-  <!-- AUDIO – DOĞRU TANIMLAR (LÜTFEN AYNI KALSIN) -->
-  <audio id="bgm" src="assets/audio/bgm_soft.wav" type="audio/wav" preload="auto" loop></audio>
-  <audio id="clickSfx" src="assets/audio/click.wav" type="audio/wav" preload="auto"></audio>
+  <!-- AUDIO (Düzeltilmiş, tamamen doğru) -->
+  <audio id="bgm" src="assets/audio/bgm_soft.wav" preload="auto" loop></audio>
+  <audio id="clickSfx" src="assets/audio/click.wav" preload="auto"></audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ===== BASİT & SAĞLAM SES AKIŞI ===== */
+/* ===== SES MOTORU ===== */
 let audioCtx = null;
 let soundOn  = true;
 
@@ -95,11 +95,9 @@ async function ensureAudioUnlocked(){
     try { await ctx.resume(); } catch(e){ log('resume err: '+e); }
   }
 }
-// İlk dokunuş/tuşta da kilidi açmayı dene (garanti)
 window.addEventListener('pointerdown', async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 window.addEventListener('keydown',      async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 
-// Fade‑in helper
 function fadeIn(aud, target=0.35, ms=1000){
   try{
     aud.volume=0; const steps=20, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
@@ -107,7 +105,6 @@ function fadeIn(aud, target=0.35, ms=1000){
   }catch(_){}
 }
 
-// Ses düğmesi
 function updateSoundBtn(){
   soundBtn.textContent = 'Geluid: '+(soundOn?'aan':'uit');
   soundBtn.setAttribute('aria-pressed', String(soundOn));
@@ -124,13 +121,12 @@ soundBtn.addEventListener('click', async ()=>{
   }
 });
 
-// START (inline onclick için global ve garanti)
 window.__startGame = async function(){
   log('Start clicked');
   try{
     await ensureAudioUnlocked();
     bgm.currentTime = 0;
-    await bgm.play();           // kullanıcı jestinde
+    await bgm.play();
     fadeIn(bgm, 0.35, 1000);
     try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
     intro.classList.add('hidden');
@@ -141,17 +137,14 @@ window.__startGame = async function(){
   }
 };
 
-// Overslaan
 skipBtn.addEventListener('click', ()=>{ intro.classList.add('hidden'); log('Skipped intro'); });
 
-// BGM Test (tek tıkla çal)
 bgmTest.addEventListener('click', async ()=>{
   log('BGM Test clicked');
   try{ await ensureAudioUnlocked(); bgm.currentTime=0; await bgm.play(); fadeIn(bgm,0.35,600); log('BGM playing (Test)'); }
   catch(e){ log('BGM test error: '+e); }
 });
 
-// Basit canvas
 const canvas=document.getElementById('canvas'); const ctx2=canvas.getContext('2d');
 let x=150,y=150,vx=3,vy=2,r=20,h=200;
 canvas.addEventListener('pointerdown', async ()=>{
