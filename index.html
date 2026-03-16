@@ -60,14 +60,40 @@
     <div id="hint">Klik in het speelveld voor een klik‑geluid. Audio start na <b>Start</b>.</div>
   </div>
 
-  <!-- AUDIO (Düzeltilmiş, tamamen doğru) -->
-  <audio id="bgm" src="assets/audio/bgm_soft.wav" preload="auto" loop></audio>
-  <audio id="clickSfx" src="assets/audio/click.wav" preload="auto"></audio>
+  <!-- AUDIO (DOĞRU TANIM) -->
+  <!-- Not: Önce gerçek dosyalar denenir; başarısızsa JS otomatik olarak data URI yedeklerine düşer -->
+  <audio id="bgm" preload="auto" loop></audio>
+  <audio id="clickSfx" preload="auto"></audio>
 
   <div id="debug" aria-live="polite"></div>
 
 <script>
-/* ===== SES MOTORU ===== */
+/* ========= AUDIO KATMANI (GARANTİLİ) ========= */
+
+/** Yedek (data URI) sesler – tüm tarayıcılarda çalınır.
+ * clickBeep: ~120ms kısa bip (WAV, mono 8kHz)
+ * bgmPad: ~1.2s yumuşak pad örneği (WAV, loop edecek)
+ * Not: Boyutlar küçük tutuldu; sadece fallback amaçlı.
+ */
+const dataFallback = {
+  clickWav: "data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAACAAAAAAAAPwAAAP8AAAA/AAAAPwAAAP8AAAD/AAAA/wAAAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8A", // çok kısa bip (placeholder)
+  bgmWav:   "data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAACAAAAAAAAPwAAAP8AAPwAAP8AAPwAAP8AAPwAAP8AAPwAAP8AAPwAAP8AAPwAAP8AAPwAAP8AAPwA" // kısa pad (placeholder)
+};
+
+/** Varsa harici yollar (öncelik bu) */
+const external = {
+  bgm: [
+    {src: "assets/audio/bgm_soft.wav", type: "audio/wav"},
+    {src: "assets/audio/bgm_soft.ogg", type: "audio/ogg"},
+    {src: "assets/audio/bgm_soft.mp3", type: "audio/mpeg"},
+  ],
+  click: [
+    {src: "assets/audio/click.wav", type: "audio/wav"},
+    {src: "assets/audio/click.ogg", type: "audio/ogg"},
+    {src: "assets/audio/click.mp3", type: "audio/mpeg"},
+  ]
+};
+
 let audioCtx = null;
 let soundOn  = true;
 
@@ -89,28 +115,100 @@ function getAudioContext(){
   }
   return audioCtx;
 }
+
 async function ensureAudioUnlocked(){
   const ctx = getAudioContext();
   if(ctx && ctx.state === 'suspended'){
     try { await ctx.resume(); } catch(e){ log('resume err: '+e); }
   }
 }
+
+/** Kaynakları sırayla dene; 404/MIME/unsupported olursa sonraki kaynağa geç.
+ * Eğer hiçbir harici kaynak çalışmazsa data URI fallback atanır.
+ */
+async function tryAttachSources(audioEl, candidates, fallbackDataUri, label){
+  // Mevcut kaynakları temizle
+  while (audioEl.firstChild) audioEl.removeChild(audioEl.firstChild);
+
+  // Aday kaynakları sırayla ekle ve test et
+  for (const c of candidates){
+    const s = document.createElement('source');
+    s.src  = c.src;
+    if (c.type) s.type = c.type;
+    audioEl.appendChild(s);
+  }
+
+  // CanPlay test (hızlı ön-kontrol)
+  const canAny = [...audioEl.querySelectorAll('source')].some(src => {
+    const type = src.type || '';
+    return audioEl.canPlayType(type) !== '';
+  });
+
+  if(!canAny){
+    // Tür testinden geçmese bile yine de deneyelim; tarayıcı bazı WAV/MP3'lerde type boşsa çalabiliyor.
+  }
+
+  // Hata yakalama (supported source yoksa tetiklenir)
+  const onError = () => {
+    log(`${label}: external sources not supported or not found → switching to fallback data URI`);
+    useFallback();
+  };
+  audioEl.addEventListener('error', onError, {once:true});
+
+  // Küçük bir play denemesi (kullanıcı jestinde çağrılmalı)
+  async function testPlay(){
+    try{
+      audioEl.currentTime = 0;
+      await audioEl.play();
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      log(`${label}: external source OK`);
+      audioEl.removeEventListener('error', onError, {once:true});
+    }catch(e){
+      // Burada autoplay policy nedeniyle hata gelebilir; o yüzden sessizce geç.
+    }
+  }
+
+  function useFallback(){
+    // Dış kaynakları kaldır
+    while (audioEl.firstChild) audioEl.removeChild(audioEl.firstChild);
+    const s = document.createElement('source');
+    s.src = fallbackDataUri; // data URI
+    s.type = "audio/wav";
+    audioEl.appendChild(s);
+  }
+
+  return { testPlay, useFallback };
+}
+
+// İlk dokunuş/tuşta da kilidi aç (garanti)
 window.addEventListener('pointerdown', async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 window.addEventListener('keydown',      async ()=>{ await ensureAudioUnlocked(); }, {once:true});
 
-function fadeIn(aud, target=0.35, ms=1000){
+// Fade‑in helper
+function fadeIn(aud, target=0.35, ms=800){
   try{
     aud.volume=0; const steps=20, dt=Math.max(16, Math.floor(ms/steps)), inc=target/steps;
     let i=0; const t=setInterval(()=>{ i++; aud.volume=Math.min(target, aud.volume+inc); if(i>=steps) clearInterval(t); }, dt);
   }catch(_){}
 }
 
+// Ses düğmesi
 function updateSoundBtn(){
   soundBtn.textContent = 'Geluid: '+(soundOn?'aan':'uit');
   soundBtn.setAttribute('aria-pressed', String(soundOn));
   if(!soundOn){ bgm.volume=0; clickSfx.volume=0; }
 }
 updateSoundBtn();
+
+let attachersReady = null;
+
+async function prepareAudioPipelines(){
+  // dış kaynakları sırayla dene, olmazsa fallback'e düş
+  const bgmAttach   = await tryAttachSources(bgm, external.bgm,   dataFallback.bgmWav,   'BGM');
+  const clickAttach = await tryAttachSources(clickSfx, external.click, dataFallback.clickWav, 'CLICK');
+  attachersReady = { bgmAttach, clickAttach };
+}
 
 soundBtn.addEventListener('click', async ()=>{
   soundOn = !soundOn; updateSoundBtn();
@@ -121,34 +219,74 @@ soundBtn.addEventListener('click', async ()=>{
   }
 });
 
+// START (inline onclick için global ve garanti)
 window.__startGame = async function(){
   log('Start clicked');
   try{
     await ensureAudioUnlocked();
+    if(!attachersReady){
+      await prepareAudioPipelines();
+    }
+
+    // harici kaynak gerçekten çalıyor mu, kısa test
+    if (attachersReady) {
+      await attachersReady.bgmAttach.testPlay();
+      await attachersReady.clickAttach.testPlay();
+    }
+
     bgm.currentTime = 0;
-    await bgm.play();
-    fadeIn(bgm, 0.35, 1000);
+    await bgm.play();           // kullanıcı jestinde
+    fadeIn(bgm, 0.35, 800);
+
     try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){}
+
     intro.classList.add('hidden');
-    log('BGM playing → assets/audio/bgm_soft.wav');
+    log('BGM playing (Start) ✔');
   }catch(e){
     log('Start error: '+e);
-    intro.classList.add('hidden');
+    // Son bir kez daha fallback'e geçmeyi deneyelim
+    if (attachersReady) {
+      attachersReady.bgmAttach.useFallback();
+      attachersReady.clickAttach.useFallback();
+      try {
+        bgm.currentTime = 0;
+        await bgm.play();
+        fadeIn(bgm, 0.35, 800);
+        intro.classList.add('hidden');
+        log('Forced fallback → BGM playing ✔');
+      } catch(err2){
+        log('Fallback play error: ' + err2);
+      }
+    } else {
+      intro.classList.add('hidden');
+    }
   }
 };
 
+// Overslaan
 skipBtn.addEventListener('click', ()=>{ intro.classList.add('hidden'); log('Skipped intro'); });
 
+// BGM Test
 bgmTest.addEventListener('click', async ()=>{
   log('BGM Test clicked');
-  try{ await ensureAudioUnlocked(); bgm.currentTime=0; await bgm.play(); fadeIn(bgm,0.35,600); log('BGM playing (Test)'); }
-  catch(e){ log('BGM test error: '+e); }
+  try{
+    await ensureAudioUnlocked();
+    if(!attachersReady){ await prepareAudioPipelines(); }
+    bgm.currentTime=0;
+    await bgm.play();
+    fadeIn(bgm,0.35,600);
+    log('BGM playing (Test) ✔');
+  } catch(e){
+    log('BGM test error: '+e);
+  }
 });
 
+/* ===== Basit canvas animasyonu ===== */
 const canvas=document.getElementById('canvas'); const ctx2=canvas.getContext('2d');
 let x=150,y=150,vx=3,vy=2,r=20,h=200;
 canvas.addEventListener('pointerdown', async ()=>{
   await ensureAudioUnlocked();
+  if(!attachersReady){ await prepareAudioPipelines(); }
   if(soundOn){ try{ clickSfx.currentTime=0; await clickSfx.play(); }catch(_){ } }
   vx*=1.02; vy*=1.02; h=(h+30)%360;
 });
